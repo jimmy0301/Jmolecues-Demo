@@ -9,6 +9,9 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import org.jmolecules.architecture.cqrs.Command;
+import org.jmolecules.architecture.cqrs.CommandHandler;
+import org.jmolecules.architecture.cqrs.QueryModel;
 import org.jmolecules.archunit.JMoleculesDddRules;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Repository;
@@ -72,6 +75,51 @@ class JMoleculesArchitectureTest {
     }
 
     /**
+     * 規則 #4：@Command 必須不可變 — 所有欄位需為 final，且不可有 setter
+     *
+     * <p>Command 代表某一時刻的操作意圖，可變 Command 可能被修改後重送，造成狀態不一致。
+     *
+     * <p>預期失敗（violation demo）：BadCommand — 違規 #4（可變 Command）
+     */
+    @Test
+    void commandsShouldBeImmutable() {
+        ArchCondition<JavaClass> beImmutable =
+                new ArchCondition<>("be immutable — no non-final fields and no setters") {
+                    @Override
+                    public void check(JavaClass javaClass, ConditionEvents events) {
+                        if (javaClass.isRecord()) return;
+
+                        javaClass.getFields().stream()
+                                .filter(f -> !f.getModifiers().contains(JavaModifier.FINAL))
+                                .filter(f -> !f.getModifiers().contains(JavaModifier.STATIC))
+                                .forEach(
+                                        f ->
+                                                events.add(
+                                                        SimpleConditionEvent.violated(
+                                                                javaClass,
+                                                                String.format(
+                                                                        "@Command %s has non-final field '%s'",
+                                                                        javaClass.getSimpleName(),
+                                                                        f.getName()))));
+
+                        javaClass.getMethods().stream()
+                                .filter(m -> m.getName().startsWith("set"))
+                                .forEach(
+                                        m ->
+                                                events.add(
+                                                        SimpleConditionEvent.violated(
+                                                                javaClass,
+                                                                String.format(
+                                                                        "@Command %s has setter '%s'",
+                                                                        javaClass.getSimpleName(),
+                                                                        m.getName()))));
+                    }
+                };
+
+        classes().that().areAnnotatedWith(Command.class).should(beImmutable).check(classes);
+    }
+
+    /**
      * 規則 #3：@ValueObject 必須不可變 — 所有欄位需為 final，且不可有 setter
      *
      * <p>兩層檢查：
@@ -123,5 +171,54 @@ class JMoleculesArchitectureTest {
                 };
 
         classes().that().areAnnotatedWith(ValueObject.class).should(beImmutable).check(classes);
+    }
+
+    /**
+     * 規則 #5：@QueryModel 不可呼叫 @CommandHandler 方法
+     *
+     * <p>CQRS 核心規則：read side 只能讀取狀態，不可觸發 state change。
+     *
+     * <p>預期失敗（violation demo）：BadQueryModel — 違規 #5（query 呼叫 command handler）
+     */
+    @Test
+    void queryModelsShouldNotTriggerCommands() {
+        ArchCondition<JavaClass> notCallCommandHandlers =
+                new ArchCondition<>("not call methods annotated with @CommandHandler") {
+                    @Override
+                    public void check(JavaClass javaClass, ConditionEvents events) {
+                        javaClass.getMethodCallsFromSelf().stream()
+                                .filter(
+                                        call ->
+                                                call.getTarget()
+                                                        .resolveMember()
+                                                        .filter(
+                                                                m ->
+                                                                        m.isAnnotatedWith(
+                                                                                CommandHandler
+                                                                                        .class))
+                                                        .isPresent())
+                                .forEach(
+                                        call ->
+                                                events.add(
+                                                        SimpleConditionEvent.violated(
+                                                                javaClass,
+                                                                String.format(
+                                                                        "@QueryModel %s calls"
+                                                                                + " @CommandHandler"
+                                                                                + " '%s.%s'",
+                                                                        javaClass.getSimpleName(),
+                                                                        call.getTarget()
+                                                                                .getOwner()
+                                                                                .getSimpleName(),
+                                                                        call.getTarget()
+                                                                                .getName()))));
+                    }
+                };
+
+        classes()
+                .that()
+                .areAnnotatedWith(QueryModel.class)
+                .should(notCallCommandHandlers)
+                .check(classes);
     }
 }
