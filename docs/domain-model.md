@@ -6,27 +6,20 @@
 
 ## Bounded Context 地圖
 
-```
-  +-----------+                   +-----------+
-  |  catalog  |                   |  customer |
-  |           |                   |           |
-  |  Product  |                   |  Customer |
-  |  Money    |                   |  Address  |
-  +-----------+                   +-----------+
-        ^                               ^
-        | ProductId                     | CustomerId
-        | (ID ref only)                 | (ID ref only)
-        |                               |
-        +-------------+   +-------------+
-                      |   |
-                 +----+---+----+
-                 |   ordering  |
-                 |             |
-                 |  Order      |
-                 |  OrderItem  |
-                 |  Pricing    |
-                 |  Service    |
-                 +-------------+
+```mermaid
+graph TD
+    ordering["**ordering**
+    Order / OrderItem
+    PricingService"]
+
+    catalog["**catalog**
+    Product / Money"]
+
+    customer["**customer**
+    Customer / Address"]
+
+    ordering -->|ProductId - ID ref only| catalog
+    ordering -->|CustomerId - ID ref only| customer
 ```
 
 - `ordering` → `catalog`：`OrderItem` 持有 `ProductId`（不持有 `Product` 物件）
@@ -134,17 +127,14 @@ OrderStatus (Enum)
 
 ### 訂單生命週期
 
-```
-建立 Order（PENDING）
-    │
-    ▼
-addItem() ──► 可重複加入 OrderItem
-    │
-    ▼
-place()  ──► PLACED，發布 OrderPlaced
-    │
-    ▼
-cancel() ──► CANCELLED，發布 OrderCancelled
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : 建立 Order
+
+    PENDING --> PENDING : addItem()
+    PENDING --> PLACED : place()\n發布 OrderPlaced
+    PLACED --> CANCELLED : cancel()\n發布 OrderCancelled
+    PENDING --> CANCELLED : cancel()\n發布 OrderCancelled
 ```
 
 ### 業務規則
