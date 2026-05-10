@@ -3,10 +3,23 @@
 電商 demo，展示 jMolecules annotation 用法。每個 DDD building block 都用對應 annotation 標記。
 
 ## 技術棧
-- Java 17 · Spring Boot 3.5.14 · Spring Data MongoDB · Spring Modulith 1.3.5
-- jMolecules BOM 2025.0.2 · jMolecules ArchUnit · jMolecules Onion Architecture
-- Spotless GJF 1.28.0 AOSP
-- Lombok
+
+| 類別 | 技術 | 版本 |
+|---|---|---|
+| 語言 / 平台 | Java | 17 |
+| 框架 | Spring Boot | 3.5.14 |
+| Web | Spring Boot Starter Web | — |
+| 資料庫 | Spring Data MongoDB | — |
+| DDD Annotations | jMolecules DDD | BOM 2025.0.2 |
+| DDD Events | jMolecules Events | BOM 2025.0.2 |
+| 架構風格 | jMolecules Onion Architecture（Classical） | BOM 2025.0.2 |
+| Spring 整合 | jMolecules Spring Integration | BOM 2025.0.2 |
+| Bytecode 轉換 | jMolecules ByteBuddy（nodep） + ByteBuddy Maven Plugin | BOM / 1.14.12 |
+| 模組管理 | Spring Modulith Starter Core | 1.3.5 |
+| 模組事件 | Spring Modulith Events API | 1.3.5 |
+| 架構測試 | jMolecules ArchUnit + Spring Modulith Test | BOM / 1.3.5 |
+| 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 |
+| 樣板程式碼 | Lombok | 1.18.46 |
 
 ## Bounded Context（Onion Architecture — Classical）
 ```
