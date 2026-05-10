@@ -13,6 +13,7 @@
 | DDD Annotations | jMolecules DDD | BOM 2025.0.2 |
 | DDD Events | jMolecules Events | BOM 2025.0.2 |
 | 架構風格 | jMolecules Onion Architecture（Classical） | BOM 2025.0.2 |
+| 架構風格 | jMolecules CQRS Architecture | BOM 2025.0.2 |
 | Spring 整合 | jMolecules Spring Integration | BOM 2025.0.2 |
 | Bytecode 轉換 | jMolecules ByteBuddy（nodep） + ByteBuddy Maven Plugin | BOM / 1.14.12 |
 | 模組管理 | Spring Modulith Starter Core | 1.3.5 |

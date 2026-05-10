@@ -1,14 +1,19 @@
 package com.example.demo.ordering.application;
 
-import com.example.demo.customer.domain.CustomerId;
+import com.example.demo.ordering.application.command.CancelOrderCommand;
+import com.example.demo.ordering.application.command.CreateOrderCommand;
+import com.example.demo.ordering.application.command.PlaceOrderCommand;
 import com.example.demo.ordering.domain.Order;
 import com.example.demo.ordering.domain.OrderId;
 import com.example.demo.ordering.domain.OrderRepository;
 import java.util.Optional;
+import org.jmolecules.architecture.cqrs.annotation.CommandDispatcher;
+import org.jmolecules.architecture.cqrs.annotation.CommandHandler;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
+@CommandDispatcher
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -19,18 +24,21 @@ public class OrderService {
         this.events = events;
     }
 
-    public Order createOrder(CustomerId customerId) {
-        return orderRepository.save(new Order(customerId));
+    @CommandHandler
+    public Order handle(CreateOrderCommand command) {
+        return orderRepository.save(new Order(command.customerId()));
     }
 
-    public Order placeOrder(OrderId orderId) {
-        Order order = findOrder(orderId);
+    @CommandHandler
+    public Order handle(PlaceOrderCommand command) {
+        Order order = findOrder(command.orderId());
         events.publishEvent(order.place());
         return orderRepository.save(order);
     }
 
-    public Order cancelOrder(OrderId orderId) {
-        Order order = findOrder(orderId);
+    @CommandHandler
+    public Order handle(CancelOrderCommand command) {
+        Order order = findOrder(command.orderId());
         events.publishEvent(order.cancel());
         return orderRepository.save(order);
     }

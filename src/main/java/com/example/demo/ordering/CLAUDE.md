@@ -22,8 +22,12 @@ ordering/
   domainservice/                 @DomainServiceRing
     PricingService.java
   application/                   @ApplicationServiceRing
-    OrderService.java
+    OrderService.java              @CommandDispatcher
     OrderEventListener.java
+    command/
+      CreateOrderCommand.java      @Command
+      PlaceOrderCommand.java       @Command
+      CancelOrderCommand.java      @Command
 ```
 
 ## Classes
@@ -40,7 +44,10 @@ ordering/
 | `OrderCancelled` | domain | DomainEvent | `@DomainEvent record` |
 | `OrderRepository` | domain | Repository | `MongoRepository<Order, OrderId>` |
 | `PricingService` | domainservice | DomainService | `@Service`，計算訂單總價 |
-| `OrderService` | application | ApplicationService | 發布 domain event，協調 repository |
+| `OrderService` | application | ApplicationService / `@CommandDispatcher` | 接收 Command，協調 repository，發布 domain event |
+| `CreateOrderCommand` | application/command | `@Command` | 建立新訂單 |
+| `PlaceOrderCommand` | application/command | `@Command` | 確認下單 |
+| `CancelOrderCommand` | application/command | `@Command` | 取消訂單 |
 | `OrderEventListener` | application | EventListener | `@ApplicationModuleListener` 接收事件 |
 | `BadOrder` | — | ⚠️ Violation Demo | 違規 #1：直接持有 `Customer` 物件 |
 | `OrderItemRepository` | — | ⚠️ Violation Demo | 違規 #2：`@Repository` 管理非 AggregateRoot |
