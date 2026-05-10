@@ -7,13 +7,11 @@ import com.example.demo.ordering.domain.Order;
 import com.example.demo.ordering.domain.OrderId;
 import com.example.demo.ordering.domain.OrderRepository;
 import java.util.Optional;
-import org.jmolecules.architecture.cqrs.annotation.CommandDispatcher;
-import org.jmolecules.architecture.cqrs.annotation.CommandHandler;
+import org.jmolecules.architecture.cqrs.CommandHandler;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
-@CommandDispatcher
 public class OrderService {
 
     private final OrderRepository orderRepository;
