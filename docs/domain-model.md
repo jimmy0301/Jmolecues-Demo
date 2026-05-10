@@ -7,22 +7,33 @@
 ## Bounded Context 地圖
 
 ```
-┌─────────────┐        ID 參照        ┌──────────────────┐
-│   catalog   │ ◄─── ProductId ───── │    ordering      │
-│             │                       │                  │
-│  Product    │                       │  Order           │
-│  Money      │                       │  OrderItem       │
-└─────────────┘                       │  PricingService  │
-                                      └──────────────────┘
-┌─────────────┐        ID 參照               ▲
-│  customer   │ ◄─── CustomerId ────────────┘
-│             │
-│  Customer   │
-│  Address    │
-└─────────────┘
+  +-----------+                   +-----------+
+  |  catalog  |                   |  customer |
+  |           |                   |           |
+  |  Product  |                   |  Customer |
+  |  Money    |                   |  Address  |
+  +-----------+                   +-----------+
+        ^                               ^
+        | ProductId                     | CustomerId
+        | (ID ref only)                 | (ID ref only)
+        |                               |
+        +-------------+   +-------------+
+                      |   |
+                 +----+---+----+
+                 |   ordering  |
+                 |             |
+                 |  Order      |
+                 |  OrderItem  |
+                 |  Pricing    |
+                 |  Service    |
+                 +-------------+
+```
+
+- `ordering` → `catalog`：`OrderItem` 持有 `ProductId`（不持有 `Product` 物件）
+- `ordering` → `customer`：`Order` 持有 `CustomerId`（不持有 `Customer` 物件）
+- `catalog`、`customer` 互相獨立，不感知 `ordering`
 
 跨 Context 只允許 ID 參照，禁止直接持有其他 Context 的 Aggregate 物件。
-```
 
 ---
 
