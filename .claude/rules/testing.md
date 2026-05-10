@@ -11,9 +11,24 @@ paths:
 
 位置：`src/test/java/com/example/demo/arch/JMoleculesArchitectureTest.java`
 
-每次新增 class 後都要跑：
+每次新增 class 後都要跑。
 
-### DDD 規則
+### 測試總覽（8 tests，7 預期失敗）
+
+| Test | 類型 | 預期結果 | 觸發 violation demo |
+|---|---|---|---|
+| `shouldFollowDddRules` | DDD | ❌ 預期失敗 | `BadOrder` #1 |
+| `shouldFollowOnionArchitecture` | Onion | ✅ 通過 | — |
+| `repositoriesShouldOnlyManageAggregateRoots` | DDD | ❌ 預期失敗 | `OrderItemRepository` #2 |
+| `valueObjectsShouldBeImmutable` | DDD | ❌ 預期失敗 | `MutablePrice` #3 |
+| `commandsShouldBeImmutable` | CQRS | ❌ 預期失敗 | `BadCommand` #4 |
+| `queryModelsShouldNotTriggerCommands` | CQRS | ❌ 預期失敗 | `BadQueryModel` #5 |
+| `commandsShouldResideInCommandPackage` | CQRS | ❌ 預期失敗 | `BadCommand` #6 |
+| `commandHandlersShouldBeInApplicationLayer` | CQRS | ❌ 預期失敗 | `BadDomainHandler` #7 |
+
+### 規則說明
+
+#### DDD / Onion
 
 | Test | 驗證內容 |
 |---|---|
@@ -22,7 +37,7 @@ paths:
 | `repositoriesShouldOnlyManageAggregateRoots` | `@Repository` 只能管理 `@AggregateRoot` |
 | `valueObjectsShouldBeImmutable` | `@ValueObject` 不可有非 final 欄位或 setter |
 
-### CQRS 規則
+#### CQRS
 
 | Test | 驗證內容 |
 |---|---|
@@ -31,13 +46,17 @@ paths:
 | `commandsShouldResideInCommandPackage` | `@Command` 必須在 `*.application.command` 套件 |
 | `commandHandlersShouldBeInApplicationLayer` | `@CommandHandler` 方法只能在 `*.application.*` 套件 |
 
-**預期失敗（violation demo）：** 以下失敗是故意的，不要修復：
-- `BadOrder.customer` — 違規 #1（跨 Context 物件參照）
-- `OrderItemRepository` — 違規 #2（為 Entity 建立 Repository）
-- `MutablePrice` — 違規 #3（ValueObject 有可變狀態）
-- `BadCommand` — 違規 #4（可變 Command）、違規 #6（Command 不在 command 套件）
-- `BadQueryModel` — 違規 #5（QueryModel 呼叫 CommandHandler）
-- `BadDomainHandler` — 違規 #7（CommandHandler 在非 application 層）
+### Violation Demo 索引（不要修復）
+
+| Demo class | 違規 # | 說明 |
+|---|---|---|
+| `BadOrder` | #1 | 跨 Context 持有 `Customer` 物件（應用 ID 參照） |
+| `OrderItemRepository` | #2 | `@Repository` 管理非 `@AggregateRoot` 的 Entity |
+| `MutablePrice` | #3 | `@ValueObject` 有非 final 欄位與 setter |
+| `BadCommand` | #4 | `@Command` 有 non-final field（可變） |
+| `BadQueryModel` | #5 | `@QueryModel` 呼叫 `@CommandHandler`（read side 觸發 state change） |
+| `BadCommand` | #6 | `@Command` 放在 context root，不在 `application.command` 套件 |
+| `BadDomainHandler` | #7 | `@CommandHandler` 在 domain 層（非 `application` 層） |
 
 ## Spring Modulith — ModularityTest
 
