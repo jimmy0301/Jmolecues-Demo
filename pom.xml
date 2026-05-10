@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.14</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>jmolecules-demo</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>jmolecules-demo</name>
+    <description>jMolecules DDD annotation demo with Spring Boot</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <jmolecules-bom.version>2025.0.2</jmolecules-bom.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jmolecules</groupId>
+                <artifactId>jmolecules-bom</artifactId>
+                <version>${jmolecules-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-bom</artifactId>
+                <version>1.3.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Spring Boot -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+        <!-- jMolecules DDD annotations -->
+        <dependency>
+            <groupId>org.jmolecules</groupId>
+            <artifactId>jmolecules-ddd</artifactId>
+        </dependency>
+
+        <!-- jMolecules Events annotations -->
+        <dependency>
+            <groupId>org.jmolecules</groupId>
+            <artifactId>jmolecules-events</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jmolecules</groupId>
+            <artifactId>jmolecules-onion-architecture</artifactId>
+        </dependency>
+
+        <!-- jMolecules Spring Boot 整合
+             自動將 jMolecules annotation 對應到 Spring stereotype
+             例如：@Repository → Spring @Repository -->
+        <dependency>
+            <groupId>org.jmolecules.integrations</groupId>
+            <artifactId>jmolecules-spring</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.jmolecules.integrations</groupId>
+            <artifactId>jmolecules-bytebuddy-nodep</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Spring Modulith — 模組邊界管理 -->
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-core</artifactId>
+        </dependency>
+
+        <!-- Spring Modulith Events — @ApplicationModuleListener -->
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-events-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.46</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Modulith test — 驗證模組結構 -->
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- jMolecules ArchUnit — 驗證 DDD 架構規則 -->
+        <dependency>
+            <groupId>org.jmolecules.integrations</groupId>
+            <artifactId>jmolecules-archunit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.46</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- Spotless — 統一程式碼格式 -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.46.1</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>1.28.0</version>
+                            <style>AOSP</style>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- jMolecules ByteBuddy plugin
+                 在 compile time 自動為 Aggregate/ValueObject 產生 Spring data mongo 相關程式碼 -->
+            <plugin>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy-maven-plugin</artifactId>
+                <version>1.14.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>transform-extended</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <classPathDiscovery>true</classPathDiscovery>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
