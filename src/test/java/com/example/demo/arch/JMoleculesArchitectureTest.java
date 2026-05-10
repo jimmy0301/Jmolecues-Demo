@@ -1,6 +1,7 @@
 package com.example.demo.arch;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaModifier;
@@ -12,6 +13,7 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.jmolecules.architecture.cqrs.Command;
 import org.jmolecules.architecture.cqrs.CommandHandler;
 import org.jmolecules.architecture.cqrs.QueryModel;
+import org.jmolecules.archunit.JMoleculesArchitectureRules;
 import org.jmolecules.archunit.JMoleculesDddRules;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Repository;
@@ -30,6 +32,12 @@ class JMoleculesArchitectureTest {
     @Test
     void shouldFollowDddRules() {
         JMoleculesDddRules.all().check(classes);
+    }
+
+    /** 驗證 Onion Architecture（Classical）環狀依賴方向：內圈不可依賴外圈 */
+    @Test
+    void shouldFollowOnionArchitecture() {
+        JMoleculesArchitectureRules.ensureOnionClassical().check(classes);
     }
 
     /** 規則 #2：@Repository 只能管理 @AggregateRoot，不可管理普通 @Entity */
@@ -219,6 +227,41 @@ class JMoleculesArchitectureTest {
                 .that()
                 .areAnnotatedWith(QueryModel.class)
                 .should(notCallCommandHandlers)
+                .check(classes);
+    }
+
+    /**
+     * 規則 #6：@Command 必須放在 *.application.command 套件
+     *
+     * <p>Command 是應用層的輸入物件，放在 application.command 套件讓團隊清楚知道從哪裡找操作意圖定義。
+     *
+     * <p>預期失敗（violation demo）：BadCommand — 違規 #6（Command 放在 context root，非 application.command）
+     */
+    @Test
+    void commandsShouldResideInCommandPackage() {
+        classes()
+                .that()
+                .areAnnotatedWith(Command.class)
+                .should()
+                .resideInAPackage("..application.command..")
+                .check(classes);
+    }
+
+    /**
+     * 規則 #7：@CommandHandler 方法只能在 application 層
+     *
+     * <p>CommandHandler 協調 repository 與 domain event，屬應用層職責；出現在 domain 層或 context root 代表層 級邊界被打破。
+     *
+     * <p>預期失敗（violation demo）：BadDomainHandler — 違規 #7（CommandHandler 在 domain 層外的 ordering root）
+     */
+    @Test
+    void commandHandlersShouldBeInApplicationLayer() {
+        methods()
+                .that()
+                .areAnnotatedWith(CommandHandler.class)
+                .should()
+                .beDeclaredInClassesThat()
+                .resideInAPackage("..application..")
                 .check(classes);
     }
 }

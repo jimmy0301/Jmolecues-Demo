@@ -42,7 +42,9 @@ com.example.demo
 - 每個 building block 加對應 jMolecules annotation（不可省略）
 - 跨 Context 只允許 ID 參照，不可持有 Aggregate 物件
 - Repository 只為 AggregateRoot 建立
-- ValueObject 必須不可變（record 或 final fields）
+- ValueObject / Command 必須不可變（record 或 final fields）
+- @Command 放在 `application.command` 套件；@CommandHandler 只在 `application` 層
+- @QueryModel 不可呼叫 @CommandHandler（read side 不觸發 state change）
 - 每次新增 class 後執行 `mvn spotless:apply` 再跑 ArchUnit test
 
 ## 常用指令
@@ -54,4 +56,5 @@ mvn test -Dtest=JMoleculesArchitectureTest  # 只跑 ArchUnit
 
 @.claude/rules/ddd-annotations.md
 @.claude/rules/bounded-context.md
+@.claude/rules/cqrs-annotations.md
 @.claude/rules/testing.md
