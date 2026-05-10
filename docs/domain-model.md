@@ -130,11 +130,10 @@ OrderStatus (Enum)
 ```mermaid
 stateDiagram-v2
     [*] --> PENDING : 建立 Order
-
     PENDING --> PENDING : addItem()
-    PENDING --> PLACED : place()\n發布 OrderPlaced
-    PLACED --> CANCELLED : cancel()\n發布 OrderCancelled
-    PENDING --> CANCELLED : cancel()\n發布 OrderCancelled
+    PENDING --> PLACED : place() → 發布 OrderPlaced
+    PLACED --> CANCELLED : cancel() → 發布 OrderCancelled
+    PENDING --> CANCELLED : cancel() → 發布 OrderCancelled
 ```
 
 ### 業務規則
