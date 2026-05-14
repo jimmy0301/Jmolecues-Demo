@@ -8,25 +8,30 @@
 
 ```mermaid
 graph TD
+    shared["**shared（Shared Kernel）**
+    Money / ProductId / CustomerId"]
+
     ordering["**ordering**
     Order / OrderItem
     PricingService"]
 
     catalog["**catalog**
-    Product / Money"]
+    Product"]
 
     customer["**customer**
     Customer / Address"]
 
-    ordering -->|ProductId - ID ref only| catalog
-    ordering -->|CustomerId - ID ref only| customer
+    catalog -->|使用| shared
+    customer -->|使用| shared
+    ordering -->|使用| shared
 ```
 
-- `ordering` → `catalog`：`OrderItem` 持有 `ProductId`（不持有 `Product` 物件）
-- `ordering` → `customer`：`Order` 持有 `CustomerId`（不持有 `Customer` 物件）
+- `shared`（Shared Kernel）：跨 Context 共用的 Value Object，所有 Context 都可依賴
+- `ordering` 透過 `shared.CustomerId` 參照顧客、透過 `shared.ProductId` 參照商品（不持有物件）
 - `catalog`、`customer` 互相獨立，不感知 `ordering`
 
-跨 Context 只允許 ID 參照，禁止直接持有其他 Context 的 Aggregate 物件。
+跨 Context 只允許 ID 參照，禁止直接持有其他 Context 的 Aggregate 物件。  
+Shared Kernel 內的型別是例外——它們是各 Context 協議共有的，可以直接 import。
 
 ---
 

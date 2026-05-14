@@ -1,4 +1,4 @@
-package com.example.demo.catalog.domain;
+package com.example.demo.shared;
 
 import java.math.BigDecimal;
 import org.jmolecules.ddd.annotation.ValueObject;

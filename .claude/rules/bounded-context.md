@@ -20,19 +20,24 @@ public class BadOrder {
 }
 ```
 
-## 現有 Context 與其 AggregateRoot
+## Shared Kernel
 
-| Context | Domain Package | AggregateRoot | ID class |
-|---|---|---|---|
-| catalog | `com.example.demo.catalog.domain` | `Product` | `ProductId` |
-| customer | `com.example.demo.customer.domain` | `Customer` | `CustomerId` |
-| ordering | `com.example.demo.ordering.domain` | `Order` | `OrderId` |
+跨多個 Context 使用的 Value Object 與 ID class 放在獨立的 shared kernel package（例如 `shared/`），不屬於任一 Context。
 
-跨 Context ID 參照時，import 路徑需使用 `.domain` sub-package：
 ```java
-import com.example.demo.customer.domain.CustomerId;
-import com.example.demo.catalog.domain.ProductId;
+// ✅ 跨 Context 的型別從 shared kernel import
+import com.example.shared.Money;
+import com.example.shared.CustomerId;
+
+// ❌ 不應直接依賴其他 Context 的 domain sub-package
+import com.example.customer.domain.CustomerId;
 ```
+
+**判斷準則：**
+- 只有一個 Context 用到 → 放在該 Context 的 `domain` package
+- 兩個以上 Context 都用到 → 放在 shared kernel package
+
+**Shared Kernel 的限制：** 修改任何 shared kernel 型別，所有依賴它的 Context 都必須同步調整，因此應盡量小、盡量穩定。
 
 ## 禁止事項
 

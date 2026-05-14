@@ -1,9 +1,9 @@
 package com.example.demo.ordering;
 
-import com.example.demo.customer.domain.CustomerId;
 import com.example.demo.ordering.application.OrderService;
 import com.example.demo.ordering.application.command.CreateOrderCommand;
 import com.example.demo.ordering.domain.Order;
+import com.example.demo.shared.CustomerId;
 import org.jmolecules.architecture.cqrs.QueryModel;
 
 /**

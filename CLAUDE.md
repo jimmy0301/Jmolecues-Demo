@@ -25,11 +25,12 @@
 ## Bounded Context（Onion Architecture — Classical）
 ```
 com.example.demo
+├── shared/             Shared Kernel → Money, ProductId, CustomerId
 ├── catalog/
-│   ├── domain/         @DomainModelRing   → Product, ProductId, Money, ProductRepository
+│   ├── domain/         @DomainModelRing   → Product, ProductRepository
 │   └── MutablePrice    ⚠️ violation demo
 ├── customer/
-│   └── domain/         @DomainModelRing   → Customer, CustomerId, Address, CustomerRepository
+│   └── domain/         @DomainModelRing   → Customer, Address, CustomerRepository
 └── ordering/
     ├── domain/         @DomainModelRing   → Order, OrderId, OrderItem, OrderRepository, events…
     ├── domainservice/  @DomainServiceRing → PricingService
@@ -55,6 +56,7 @@ mvn test -Dtest=JMoleculesArchitectureTest  # 只跑 ArchUnit
 ```
 
 @.claude/rules/ddd-annotations.md
+@.claude/rules/onion-architecture.md
 @.claude/rules/bounded-context.md
 @.claude/rules/cqrs-annotations.md
 @.claude/rules/testing.md

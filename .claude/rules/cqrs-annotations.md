@@ -61,20 +61,17 @@ public class BadQueryModel {
 ## 規則 #6：@Command 必須放在 application.command 套件
 
 ```
-ordering/
+<bounded-context>/
   application/
-    command/              ← @Command 唯一合法位置
-      CreateOrderCommand.java
-      PlaceOrderCommand.java
-      CancelOrderCommand.java
+    command/        ← @Command 唯一合法位置
 ```
 
 ```java
-// ✅ 正確：package com.example.demo.ordering.application.command
+// ✅ 正確：package *.application.command
 @Command
 public record PlaceOrderCommand(OrderId orderId) {}
 
-// ❌ 違規：package com.example.demo.ordering（BadCommand）
+// ❌ 違規：放在 context root 或其他套件
 @Command
 public class BadCommand { ... }
 ```
@@ -82,14 +79,14 @@ public class BadCommand { ... }
 ## 規則 #7：@CommandHandler 只能在 application 層
 
 ```java
-// ✅ 正確：OrderService 在 ordering.application 套件
+// ✅ 正確：在 *.application.* 套件
 @Service
 public class OrderService {
     @CommandHandler
     public Order handle(CreateOrderCommand command) { ... }
 }
 
-// ❌ 違規：BadDomainHandler 在 ordering 套件（非 application 子套件）
+// ❌ 違規：在 domain 層或 context root
 public class BadDomainHandler {
     @CommandHandler
     public Order handle(CreateOrderCommand command) { ... }
@@ -110,12 +107,3 @@ public class BadDomainHandler {
 @CommandDispatcher(dispatches = "CreateOrderCommand")
 public Order dispatch(CreateOrderCommand command) { ... }
 ```
-
-## Violation Demo 對照表
-
-| Demo class | 違規 # | 規則 |
-|---|---|---|
-| `BadCommand` | #4 | @Command 有 non-final field（可變）|
-| `BadCommand` | #6 | @Command 不在 application.command 套件 |
-| `BadQueryModel` | #5 | @QueryModel 呼叫 @CommandHandler |
-| `BadDomainHandler` | #7 | @CommandHandler 不在 application 層 |

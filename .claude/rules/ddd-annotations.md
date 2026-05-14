@@ -1,10 +1,11 @@
+
 ---
 description: jMolecules DDD annotation 使用規則，編輯 src/main/java 時自動載入
 paths:
   - src/main/java/**/*.java
 ---
 
-# jMolecules Annotation 規則
+# ㄎ
 
 ## AggregateRoot
 ```java
@@ -119,7 +120,9 @@ public record OrderId(@Identity UUID id) implements Identifier {
 ```
 - `@ValueObject` 標記 record，`@Identity` 標記 UUID 欄位
 - 實作 `org.jmolecules.ddd.types.Identifier`
-- AggregateRoot 和 Entity 都需要各自的 ID class（例如 `OrderId`、`OrderItemId`）
+- AggregateRoot 和 Entity 都需要各自的 ID class
+- **只在自己 Context 內使用** → 放在該 Context 的 `domain` package
+- **被其他 Context 當作跨 Context 參照** → 放在 shared kernel package（見 `bounded-context.md`）
 
 ## ValueObject
 ```java
@@ -128,6 +131,8 @@ public record Money(BigDecimal amount, String currency) { ... }
 ```
 - 必須不可變：用 record，或所有欄位 final
 - 禁止 `@Setter`、非 final 欄位
+- **只在單一 Context 內使用** → 放在該 Context 的 `domain` package
+- **跨 Context 使用** → 放在 shared kernel package（見 `bounded-context.md`）
 
 ## Repository
 ```java
@@ -142,11 +147,39 @@ public interface OrderRepository extends CrudRepository<Order, OrderId> { ... }
 public record OrderPlaced(OrderId orderId, Instant occurredOn) { ... }
 ```
 - 命名用**過去式**
-- 用 `@DomainEventHandler` 標記發出 event 的 Aggregate 方法
+- producer 方法（`place()`、`cancel()`）直接回傳 DomainEvent 即可，不需任何 jMolecules annotation
+
+## DomainEventHandler（consumer）
+```java
+// org.jmolecules.event.annotation.DomainEventHandler
+// 本專案改用 Spring Modulith 的 @ApplicationModuleListener，效果相同且支援非同步
+@ApplicationModuleListener
+public void on(OrderPlaced event) { ... }
+```
+- `@DomainEventHandler` 是官方 jMolecules annotation，標記**接收**（消費）DomainEvent 的方法
+- 本專案選用 `@ApplicationModuleListener`（Spring Modulith）替代，因為它額外提供：
+  - 非同步執行（Async）
+  - 交易隔離（事件在原交易 commit 後才觸發）
+  - Spring Modulith 模組文件整合
+- 兩者語意相同，擇一使用，**不要同時標記**
+
+## Association（跨 Aggregate 參照）
+```java
+// jMolecules 提供兩種跨 Aggregate 參照方式，擇一即可
+// 方式 A — 純 ID（本專案採用）
+private CustomerId customerId;
+
+// 方式 B — Association wrapper（提供更強的型別語意）
+private Association<Customer, CustomerId> customer;
+```
+- `Association<T, ID>` 位於 `org.jmolecules.ddd.types.Association`
+- 官方 ArchUnit 規則 `aggregateReferencesShouldBeViaIdOrAssociation()` 兩種都接受
+- 本專案採**純 ID 方式**，理由：更簡潔，MongoDB document 直接儲存 UUID，不需要額外的 wrapper 序列化設定
+- 若日後需要強調「這個欄位是跨 Aggregate 的 Association」語意，可改用 `Association<T, ID>`
 
 ## DomainService
 ```java
-@Service   // org.jmolecules.ddd.annotation.Service（沒有 @DomainService，不存在）
+@Service   // org.jmolecules.ddd.annotation.Service
 public class PricingService { ... }
 ```
 

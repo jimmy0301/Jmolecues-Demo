@@ -1,7 +1,7 @@
 package com.example.demo.ordering.domainservice;
 
-import com.example.demo.catalog.domain.Money;
 import com.example.demo.ordering.domain.OrderItem;
+import com.example.demo.shared.Money;
 import java.util.List;
 import org.jmolecules.ddd.annotation.Service;
 

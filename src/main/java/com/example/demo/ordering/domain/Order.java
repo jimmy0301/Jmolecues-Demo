@@ -1,13 +1,12 @@
 package com.example.demo.ordering.domain;
 
-import com.example.demo.customer.domain.CustomerId;
+import com.example.demo.shared.CustomerId;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
-import org.jmolecules.event.annotation.DomainEventHandler;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -53,7 +52,6 @@ public class Order implements org.jmolecules.ddd.types.AggregateRoot<Order, Orde
         items.add(item);
     }
 
-    @DomainEventHandler
     public OrderPlaced place() {
         if (status != OrderStatus.PENDING) {
             throw new IllegalStateException("Order is already " + status);
@@ -62,7 +60,6 @@ public class Order implements org.jmolecules.ddd.types.AggregateRoot<Order, Orde
         return new OrderPlaced(this.id, Instant.now());
     }
 
-    @DomainEventHandler
     public OrderCancelled cancel() {
         if (status == OrderStatus.CANCELLED) {
             throw new IllegalStateException("Order is already cancelled");

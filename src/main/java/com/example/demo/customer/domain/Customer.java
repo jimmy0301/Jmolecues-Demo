@@ -1,5 +1,6 @@
 package com.example.demo.customer.domain;
 
+import com.example.demo.shared.CustomerId;
 import lombok.Getter;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;

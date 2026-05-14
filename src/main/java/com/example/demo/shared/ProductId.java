@@ -1,4 +1,4 @@
-package com.example.demo.catalog.domain;
+package com.example.demo.shared;
 
 import java.util.UUID;
 import org.jmolecules.ddd.annotation.Identity;
