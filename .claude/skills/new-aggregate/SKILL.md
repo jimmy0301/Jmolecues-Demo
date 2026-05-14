@@ -8,7 +8,7 @@ arguments:
 
 在指定的 Bounded Context 建立一組完整的 Aggregate 相關 class。
 
-用法：/new-aggregate <context> <AggregateName> [ValueObject1] [ValueObject2] ...
+用法：/new-aggregate <context> <AggregateName>  [ValueObject1] [ValueObject2] ...
 範例：/new-aggregate catalog Product Money Price
 
 引數：$ARGUMENTS
