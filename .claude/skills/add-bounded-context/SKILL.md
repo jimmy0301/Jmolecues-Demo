@@ -15,7 +15,7 @@ arguments:
 ## 建立的目錄結構
 
 ```
-src/main/java/com/example/demo/<context-name>/
+src/main/java/<base-package>/<context-name>/
 ├── package-info.java          @BoundedContext
 ├── CLAUDE.md                  per-context 說明
 └── domain/
@@ -28,21 +28,21 @@ src/main/java/com/example/demo/<context-name>/
 
 1. **建立 package 目錄**
    ```
-   src/main/java/com/example/demo/<context-name>/
-   src/main/java/com/example/demo/<context-name>/domain/
+   src/main/java/<base-package>/<context-name>/
+   src/main/java/<base-package>/<context-name>/domain/
    ```
 
 2. **`package-info.java`** — BoundedContext annotation
    ```java
    @BoundedContext(name = "<context-name>")
-   package com.example.demo.<context-name>;
+   package <base-package>.<context-name>;
    import org.jmolecules.ddd.annotation.BoundedContext;
    ```
 
 3. **`domain/package-info.java`** — DomainModelRing annotation
    ```java
    @DomainModelRing
-   package com.example.demo.<context-name>.domain;
+   package <base-package>.<context-name>.domain;
    import org.jmolecules.architecture.onion.classical.DomainModelRing;
    ```
 
@@ -62,13 +62,9 @@ src/main/java/com/example/demo/<context-name>/
    | Class | Ring | 類型 | 說明 |
 
    ## 對外暴露
-   其他 Context 只能使用 `<AggregateName>Id`，import 路徑：
-   import com.example.demo.<context-name>.domain.<AggregateName>Id;
+   其他 Context 只能使用 `<AggregateName>Id`（或透過 shared kernel），不可直接依賴此 Context 的 domain sub-package。
    ```
 
 6. **更新根目錄 `CLAUDE.md` 的 Bounded Context 結構圖**
-
-7. **更新 `.claude/rules/bounded-context.md` 的 Context 對照表**
-   - 新增一列：`| <context-name> | com.example.demo.<context-name>.domain | <AggregateName> | <AggregateName>Id |`
 
 完成後執行：`mvn spotless:apply && mvn test -Dtest=JMoleculesArchitectureTest`

@@ -73,7 +73,7 @@ Application Service 是「**做什麼（Use Case）**」，Domain Service 是「
 ```java
 // domainservice/package-info.java（若不存在）
 @DomainServiceRing
-package com.example.demo.<context>.domainservice;
+package <base-package>.<context>.domainservice;
 import org.jmolecules.architecture.onion.classical.DomainServiceRing;
 ```
 
@@ -121,7 +121,7 @@ public class <ServiceName> {
 ```java
 // application/package-info.java（若不存在）
 @ApplicationServiceRing
-package com.example.demo.<context>.application;
+package <base-package>.<context>.application;
 import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
 ```
 
@@ -146,7 +146,7 @@ public class <ServiceName> {
     // Use Case：狀態變更 + 發布 Event
     public <AggregateRoot> <action>(<AggregateRoot>Id id) {
         <AggregateRoot> aggregate = findOrThrow(id);
-        events.publishEvent(aggregate.<action>());   // @DomainEventHandler 回傳 event
+        events.publishEvent(aggregate.<action>());   // producer 方法回傳 event
         return repository.save(aggregate);
     }
 
@@ -172,7 +172,7 @@ public class <ServiceName> {
 
 1. 若 ring sub-package 不存在，建立 `package-info.java`
 2. 建立 Service class（依上方模板）
-3. 更新 `src/main/java/com/example/demo/<context>/CLAUDE.md`，將新 Service 加入 Classes 表格
+3. 更新 `<context>/CLAUDE.md`，將新 Service 加入 Classes 表格
 
 完成後執行：
 ```bash

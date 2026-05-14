@@ -28,7 +28,7 @@ mvn test -Dtest=ModularityTest
    - 若有非預期的失敗，分析原因並建議修正
 
 **預期失敗（不需修復）：**
-- `JMoleculesArchitectureTest.shouldFollowDddRules` — `BadOrder.customer` 跨 Context 違規
-- `JMoleculesArchitectureTest.repositoriesShouldOnlyManageAggregateRoots` — `OrderItemRepository` 管理 Entity
-- `JMoleculesArchitectureTest.valueObjectsShouldBeImmutable` — `MutablePrice` 可變狀態
-- `ModularityTest.verifiesModularStructure` — 同上 `BadOrder` 違規
+
+預期失敗的測試對應專案中刻意保留的 violation demo class。
+判斷方式：查看 `docs/` 下的 violation demo 說明表格，標注為 violation demo 的失敗均屬預期行為，不需修復。
+非預期失敗（不在 violation demo 清單內）才需要分析原因並修正。

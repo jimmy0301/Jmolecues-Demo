@@ -45,20 +45,20 @@ Domain interface 是純 Java，不依賴任何框架。
 ### 目錄結構
 
 ```
-com.example.demo.<context>/                                    ← domain 層
+<base-package>.<context>/                                       ← domain 層
 ├── <AggregateName>.java
 ├── <AggregateName>Id.java
 └── <AggregateName>Repository.java                             ← 純 Java interface，無框架依賴
 
-com.example.demo.infrastructure.repository.mongo/             ← MongoDB infrastructure（外部不可見）
+<base-package>.infrastructure.repository.mongo/               ← MongoDB infrastructure（外部不可見）
 ├── Mongo<AggregateName>Repository.java                        ← implements domain interface，@Profile("mongodb")
 └── SpringData<AggregateName>Repository.java                   ← package-private，extends MongoRepository
 
-com.example.demo.infrastructure.repository.jpa/              ← JPA infrastructure（外部不可見）
+<base-package>.infrastructure.repository.jpa/                 ← JPA infrastructure（外部不可見）
 ├── Jpa<AggregateName>Repository.java                          ← implements domain interface，@Profile("jpa")
 └── SpringDataJpa<AggregateName>Repository.java                ← package-private，extends JpaRepository
 
-com.example.demo.infrastructure.repository.cache/             ← 快取 Decorator
+<base-package>.infrastructure.repository.cache/               ← 快取 Decorator
 └── Cache<AggregateName>Repository.java                        ← @Primary，包裝任一實作
 ```
 
@@ -195,9 +195,9 @@ class Cache<AggregateName>Repository implements <AggregateName>Repository {
         });
     }
 
-    @Override public <AggregateName> save(<AggregateName> aggregate) {
+    @Override public void save(<AggregateName> aggregate) {
         cache.evict(aggregate.getId());
-        return delegate.save(aggregate);
+        delegate.save(aggregate);
     }
     // ...其他方法
 }

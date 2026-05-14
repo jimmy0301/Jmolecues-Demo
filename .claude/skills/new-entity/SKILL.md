@@ -19,7 +19,7 @@ arguments:
 Entity 與 owning AggregateRoot 放在同一個 `<context>/domain/` ring：
 
 ```
-src/main/java/com/example/demo/<context>/domain/
+src/main/java/<base-package>/<context>/domain/
 ├── <AggregateName>.java           （已存在）
 ├── <EntityName>Id.java            ← 新增
 └── <EntityName>.java              ← 新增
@@ -66,7 +66,7 @@ src/main/java/com/example/demo/<context>/domain/
    ```
    禁止外部直接操作 Entity，一律透過 AggregateRoot 的方法。
 
-5. **更新 `src/main/java/com/example/demo/<context>/CLAUDE.md`** 加入新 Entity 的說明
+5. **更新 `<context>/CLAUDE.md`** 加入新 Entity 的說明
 
 完成後執行：
 ```bash

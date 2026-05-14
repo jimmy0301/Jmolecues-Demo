@@ -18,7 +18,7 @@ arguments:
 所有 domain class 放在 `<context>/domain/` ring（`@DomainModelRing`）：
 
 ```
-src/main/java/com/example/demo/<context>/
+src/main/java/<base-package>/<context>/
 ├── package-info.java              @BoundedContext（已存在則跳過）
 └── domain/
     ├── package-info.java          @DomainModelRing（已存在則跳過）
@@ -60,18 +60,18 @@ src/main/java/com/example/demo/<context>/
 5. **`domain/package-info.java`**（若不存在）
    ```java
    @DomainModelRing
-   package com.example.demo.<context>.domain;
+   package <base-package>.<context>.domain;
    import org.jmolecules.architecture.onion.classical.DomainModelRing;
    ```
 
 6. **`package-info.java`**（若不存在）
    ```java
    @BoundedContext(name = "<context>")
-   package com.example.demo.<context>;
+   package <base-package>.<context>;
    import org.jmolecules.ddd.annotation.BoundedContext;
    ```
 
-7. **更新 `src/main/java/com/example/demo/<context>/CLAUDE.md`** 加入新 class 說明
+7. **更新 `<context>/CLAUDE.md`** 加入新 class 說明
 
 完成後執行：
 ```bash

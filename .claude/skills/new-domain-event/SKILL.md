@@ -1,6 +1,6 @@
 ---
 name: new-domain-event
-description: 在指定的 Bounded Context 建立 DomainEvent、handler 方法、event listener，並透過 ApplicationEventPublisher 發布
+description: 在指定的 Bounded Context 建立 DomainEvent、producer 方法、event listener，並透過 ApplicationEventPublisher 發布
 arguments:
   - EventName
   - context
@@ -33,12 +33,12 @@ public record <EventName>(<AggregateRoot>Id id, Instant occurredOn) {}
 - 欄位：相關 AggregateRoot 的 ID + `Instant occurredOn`
 - 用 record 實作（不可變）
 
-### 2. 在 AggregateRoot 加 `@DomainEventHandler` 方法
+### 2. 在 AggregateRoot 加 producer 方法
 
 AggregateRoot 在 `domain/` 下，直接修改現有檔案：
 
 ```java
-@DomainEventHandler  // org.jmolecules.event.annotation.DomainEventHandler
+// 不加任何 annotation — producer 方法只負責更新狀態並回傳 event
 public <EventName> someAction() {
     // 更新 Aggregate 內部狀態...
     this.status = SomeStatus.DONE;
@@ -48,6 +48,7 @@ public <EventName> someAction() {
 
 - 方法命名用動詞（`place()`、`cancel()`、`ship()`）
 - 只負責**回傳** event，不自己發布（發布由 application service 負責）
+- **不加 `@DomainEventHandler`**：該 annotation 是給消費（接收）event 的 handler，不是給 producer 用的
 
 ### 3. 在 application service 用 `ApplicationEventPublisher` 發布
 
@@ -56,7 +57,7 @@ Application service 在 `application/` ring。若已有 `<Context>Service`，加
 ```java
 // application/package-info.java（若不存在）
 @ApplicationServiceRing
-package com.example.demo.<context>.application;
+package <base-package>.<context>.application;
 import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
 ```
 
@@ -70,7 +71,7 @@ public class <Context>Service {
 
     public <AggregateRoot> someAction(<AggregateRoot>Id id) {
         <AggregateRoot> aggregate = findAggregate(id);
-        events.publishEvent(aggregate.someAction());  // 發布 @DomainEventHandler 回傳的 event
+        events.publishEvent(aggregate.someAction());  // producer 方法回傳 event，交給 publisher 發布
         return repository.save(aggregate);
     }
 }
@@ -94,7 +95,7 @@ class <EventName>Listener {
 }
 ```
 
-- `@ApplicationModuleListener` 是 Spring Modulith 的 async-capable event listener
+- `@ApplicationModuleListener` 是 Spring Modulith 的 async-capable event listener，語意等同 `@DomainEventHandler`（consumer）
 - 若要跨 module 接收，將 listener 放到接收方 context 的 `application/` package 下
 
 完成後執行：
