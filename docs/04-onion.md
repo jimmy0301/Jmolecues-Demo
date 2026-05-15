@@ -40,11 +40,11 @@ graph TD
 
 ## 依賴方向規則
 
-```
-Infrastructure Ring
-  └── 可依賴 Application Service Ring
-        └── 可依賴 Domain Service Ring
-              └── 可依賴 Domain Model Ring（不依賴任何外層）
+```mermaid
+graph LR
+    I[Infrastructure Ring] -->|可依賴| A[Application Service Ring]
+    A -->|可依賴| DS[Domain Service Ring]
+    DS -->|可依賴| DM["Domain Model Ring\n（不依賴任何外層）"]
 ```
 
 **違規範例：**
