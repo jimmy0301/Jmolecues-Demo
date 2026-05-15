@@ -6,7 +6,8 @@
 |---|---|---|---|
 | 語言 / 平台 | Java | 17 | — |
 | 框架 | Spring Boot | 3.5.14 | 應用程式骨架 |
-| Web | Spring Boot Starter Web | — | REST 端點（待實作） |
+| Web | Spring Boot Starter Web | — | REST 端點 |
+| API 規格 | OpenAPI Generator Maven Plugin | 7.12.0 | 從 YAML spec 產生 Spring server interface |
 | 資料庫 | Spring Data MongoDB | — | 持久化 |
 | DDD Annotations | jMolecules DDD | BOM 2025.0.2 | 在程式碼中表達 DDD 角色 |
 | DDD Events | jMolecules Events | BOM 2025.0.2 | `@DomainEvent`、`@DomainEventHandler` |
