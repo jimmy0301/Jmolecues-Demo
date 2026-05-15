@@ -17,19 +17,16 @@ Onion Architecture 定義 **Context 內部**的分層規則：依賴方向只能
 
 ## 四個環（Ring）
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  Infrastructure Ring（最外層）                            │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │  Application Service Ring                          │  │
-│  │  ┌──────────────────────────────────────────────┐  │  │
-│  │  │  Domain Service Ring                         │  │  │
-│  │  │  ┌──────────────────────────────────────┐   │  │  │
-│  │  │  │  Domain Model Ring（最內層）          │   │  │  │
-│  │  │  └──────────────────────────────────────┘   │  │  │
-│  │  └──────────────────────────────────────────────┘  │  │
-│  └────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    I["Infrastructure Ring（最外層）\nController · DB Adapter · 外部系統整合"]
+    A["Application Service Ring\nCommand Handler · Application Service · Event Listener"]
+    DS["Domain Service Ring\n跨 Aggregate 無狀態領域邏輯"]
+    DM["Domain Model Ring（最內層）\nAggregate Root · Entity · Value Object\nDomain Event · Repository 介面"]
+
+    I -->|依賴| A
+    A -->|依賴| DS
+    DS -->|依賴| DM
 ```
 
 | Ring | 職責 | 典型內容 |
