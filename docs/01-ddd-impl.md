@@ -59,14 +59,16 @@ graph TD
 ### Step 1：Value Object — 最小的不可變積木
 
 ```
-shared/Money.java               金額，有 add() / multiply()
-shared/ProductId.java           UUID 包裝成有語意的型別
-ordering/domain/Quantity.java   數量，帶業務驗證（不能為 0 或負數）
+shared/Money.java                   金額，有 add() / multiply()
+catalog/domain/ProductId.java       UUID 包裝成有語意的型別（catalog context 自用）
+ordering/domain/Quantity.java       數量，帶業務驗證（不能為 0 或負數）
+ordering/domain/ProductReference.java  ordering 對商品的跨 Context 參照（包裝 UUID）
 ```
 
 **關鍵問題**：為什麼要把 `BigDecimal` 包成 `Money`？  
 `BigDecimal` 是純數字，`Money` 可以帶業務規則——不同幣別不能相加、乘法回傳新實例保持不可變。  
 `Money` 在 `shared` 而非 `catalog.domain`，是因為 `ordering` 的 `OrderItem` 也需要它。  
+`ProductId` 放在 `catalog/domain/`，只有 `catalog` 自己使用；`ordering` 改用 `ProductReference` 間接參照，不 import `ProductId`。  
 `Quantity` 只在 `ordering` 內部用，留在 `ordering.domain` 即可。
 
 ### Step 2：Entity — 有 ID、隸屬 Aggregate
