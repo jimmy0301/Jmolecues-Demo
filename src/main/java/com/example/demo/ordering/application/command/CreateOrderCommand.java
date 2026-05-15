@@ -1,7 +1,7 @@
 package com.example.demo.ordering.application.command;
 
-import com.example.demo.shared.CustomerId;
+import java.util.UUID;
 import org.jmolecules.architecture.cqrs.Command;
 
 @Command
-public record CreateOrderCommand(CustomerId customerId) {}
+public record CreateOrderCommand(UUID customerId) {}

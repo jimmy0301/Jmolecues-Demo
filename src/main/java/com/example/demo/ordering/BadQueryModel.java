@@ -3,7 +3,7 @@ package com.example.demo.ordering;
 import com.example.demo.ordering.application.OrderService;
 import com.example.demo.ordering.application.command.CreateOrderCommand;
 import com.example.demo.ordering.domain.Order;
-import com.example.demo.shared.CustomerId;
+import java.util.UUID;
 import org.jmolecules.architecture.cqrs.QueryModel;
 
 /**
@@ -20,7 +20,7 @@ public class BadQueryModel {
         this.orderService = orderService;
     }
 
-    public Order findOrCreate(CustomerId customerId) {
+    public Order findOrCreate(UUID customerId) {
         // 違規：query 方法內呼叫 @CommandHandler，造成 side effect
         return orderService.handle(new CreateOrderCommand(customerId));
     }

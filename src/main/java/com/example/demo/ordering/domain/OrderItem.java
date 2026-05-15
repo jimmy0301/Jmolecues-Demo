@@ -1,7 +1,7 @@
 package com.example.demo.ordering.domain;
 
 import com.example.demo.shared.Money;
-import com.example.demo.shared.ProductId;
+import java.util.UUID;
 import lombok.Getter;
 import org.jmolecules.ddd.annotation.Identity;
 import org.jmolecules.ddd.types.Entity;
@@ -12,14 +12,15 @@ public class OrderItem implements Entity<Order, OrderItemId> {
 
     @Identity private OrderItemId id = OrderItemId.create();
 
-    private ProductId productId;
+    private ProductReference product;
+
     private Quantity quantity;
     private Money unitPrice;
 
     protected OrderItem() {}
 
-    public OrderItem(ProductId productId, Quantity quantity, Money unitPrice) {
-        this.productId = productId;
+    public OrderItem(UUID productId, Quantity quantity, Money unitPrice) {
+        this.product = new ProductReference(productId);
         this.quantity = quantity;
         this.unitPrice = unitPrice;
     }

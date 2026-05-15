@@ -1,8 +1,8 @@
 package com.example.demo.customer.application;
 
 import com.example.demo.customer.domain.Customer;
+import com.example.demo.customer.domain.CustomerId;
 import com.example.demo.customer.domain.CustomerRepository;
-import com.example.demo.shared.CustomerId;
 import java.util.Optional;
 import org.jmolecules.architecture.cqrs.QueryModel;
 import org.springframework.stereotype.Service;

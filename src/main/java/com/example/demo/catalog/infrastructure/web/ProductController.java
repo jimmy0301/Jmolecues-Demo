@@ -5,7 +5,7 @@ import com.example.demo.catalog.api.model.Money;
 import com.example.demo.catalog.api.model.ProductResponse;
 import com.example.demo.catalog.application.ProductQueryModel;
 import com.example.demo.catalog.domain.Product;
-import com.example.demo.shared.ProductId;
+import com.example.demo.catalog.domain.ProductId;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;

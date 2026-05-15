@@ -1,6 +1,6 @@
 package com.example.demo.ordering;
 
-import com.example.demo.shared.CustomerId;
+import com.example.demo.customer.domain.CustomerId;
 import org.jmolecules.architecture.cqrs.Command;
 
 /**

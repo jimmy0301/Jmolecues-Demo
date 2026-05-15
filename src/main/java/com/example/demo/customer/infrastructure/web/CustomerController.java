@@ -8,7 +8,7 @@ import com.example.demo.customer.application.CustomerQueryModel;
 import com.example.demo.customer.application.CustomerService;
 import com.example.demo.customer.application.command.CreateCustomerCommand;
 import com.example.demo.customer.domain.Customer;
-import com.example.demo.shared.CustomerId;
+import com.example.demo.customer.domain.CustomerId;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,10 +1,11 @@
 package com.example.demo.ordering.domain;
 
-import com.example.demo.shared.CustomerId;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import lombok.Getter;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.data.annotation.Id;
@@ -14,35 +15,27 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "orders")
 public class Order implements org.jmolecules.ddd.types.AggregateRoot<Order, OrderId> {
 
-    @Id @Identity private OrderId id;
+    @Getter @Id @Identity private OrderId id;
 
-    private CustomerId customerId;
+    private CustomerReference customer;
 
     private List<OrderItem> items = new ArrayList<>();
 
-    private OrderStatus status = OrderStatus.PENDING;
+    @Getter private OrderStatus status = OrderStatus.PENDING;
 
     protected Order() {}
 
-    public Order(CustomerId customerId) {
+    public Order(UUID customerId) {
         this.id = OrderId.create();
-        this.customerId = customerId;
+        this.customer = new CustomerReference(customerId);
     }
 
-    public OrderId getId() {
-        return id;
-    }
-
-    public CustomerId getCustomerId() {
-        return customerId;
+    public CustomerReference getCustomer() {
+        return customer;
     }
 
     public List<OrderItem> getItems() {
         return Collections.unmodifiableList(items);
-    }
-
-    public OrderStatus getStatus() {
-        return status;
     }
 
     public void addItem(OrderItem item) {

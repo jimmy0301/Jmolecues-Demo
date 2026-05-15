@@ -13,7 +13,6 @@ import com.example.demo.ordering.application.command.PlaceOrderCommand;
 import com.example.demo.ordering.domain.Order;
 import com.example.demo.ordering.domain.OrderId;
 import com.example.demo.ordering.domain.OrderItem;
-import com.example.demo.shared.CustomerId;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -42,7 +41,7 @@ class OrderController implements OrdersApi {
 
     @Override
     public ResponseEntity<OrderResponse> createOrder(CreateOrderRequest createOrderRequest) {
-        var command = new CreateOrderCommand(new CustomerId(createOrderRequest.getCustomerId()));
+        var command = new CreateOrderCommand(createOrderRequest.getCustomerId());
         var order = orderService.handle(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(order));
     }
@@ -64,7 +63,7 @@ class OrderController implements OrdersApi {
                 order.getItems().stream().map(this::toItemResponse).toList();
         return new OrderResponse(
                 order.getId().id(),
-                order.getCustomerId().id(),
+                order.getCustomer().id(),
                 StatusEnum.fromValue(order.getStatus().name()),
                 items);
     }
@@ -74,6 +73,6 @@ class OrderController implements OrdersApi {
                 new com.example.demo.ordering.api.model.Money(
                         item.getUnitPrice().amount(), item.getUnitPrice().currency());
         return new OrderItemResponse(
-                item.getId().id(), item.getProductId().id(), item.getQuantity().value(), unitPrice);
+                item.getId().id(), item.getProduct().id(), item.getQuantity().value(), unitPrice);
     }
 }
