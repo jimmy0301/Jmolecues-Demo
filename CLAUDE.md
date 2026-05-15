@@ -59,6 +59,14 @@ com.example.demo
 - @QueryModel 不可呼叫 @CommandHandler（read side 不觸發 state change）
 - 每次新增 class 後執行 `mvn spotless:apply` 再跑 ArchUnit test
 
+## 完成操作後的自動行為
+
+每次新增、修改或刪除 class、package 結構、架構規則後，自動檢查並同步以下文件（有變動才修改）：
+- `CLAUDE.md` — Bounded Context 結構圖、核心規則
+- `docs/` — 相關章節的程式碼範例、表格、結構說明
+- `.claude/rules/` — 對應的 rule 檔範例與規則描述
+- `.claude/skills/` — 對應的 skill 模板
+
 ## 常用指令
 ```bash
 mvn spotless:apply          # 格式化
