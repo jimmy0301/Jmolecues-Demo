@@ -23,14 +23,17 @@ jMolecules 用 package-level annotation 標記每個 ring，ArchUnit 的 `ensure
 
 ```mermaid
 graph TD
-    subgraph app["ApplicationService Ring　@ApplicationServiceRing"]
-        subgraph ds["DomainService Ring　@DomainServiceRing"]
-            subgraph dm["DomainModel Ring　@DomainModelRing"]
-                D["Order · OrderItem\nOrderPlaced · OrderCancelled\nOrderRepository"]
+    subgraph infra["Infrastructure Ring　@InfrastructureRing"]
+        subgraph app["ApplicationService Ring　@ApplicationServiceRing"]
+            subgraph ds["DomainService Ring　@DomainServiceRing"]
+                subgraph dm["DomainModel Ring　@DomainModelRing"]
+                    D["Order · OrderItem\nOrderPlaced · OrderCancelled\nOrderRepository"]
+                end
+                S["PricingService"]
             end
-            S["PricingService"]
+            A["OrderService · OrderQueryModel · OrderEventListener\nCreateOrderCommand · PlaceOrderCommand · CancelOrderCommand"]
         end
-        A["OrderService\nCreateOrderCommand · PlaceOrderCommand · CancelOrderCommand"]
+        I["OrderController"]
     end
 ```
 
@@ -38,7 +41,8 @@ graph TD
 |---|---|---|
 | DomainModel | `@DomainModelRing` | `Order`、`OrderItem`、`OrderPlaced`、`OrderRepository` |
 | DomainService | `@DomainServiceRing` | `PricingService` |
-| ApplicationService | `@ApplicationServiceRing` | `OrderService`、`*Command` |
+| ApplicationService | `@ApplicationServiceRing` | `OrderService`、`OrderQueryModel`、`OrderEventListener`、`*Command` |
+| Infrastructure | `@InfrastructureRing` | `OrderController`、`ProductController`、`CustomerController` |
 
 ---
 
@@ -65,6 +69,13 @@ package com.example.demo.ordering.application;
 import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
 ```
 
+```java
+// ordering/infrastructure/web/package-info.java
+@InfrastructureRing
+package com.example.demo.ordering.infrastructure.web;
+import org.jmolecules.architecture.onion.classical.InfrastructureRing;
+```
+
 ---
 
 ## ArchUnit 驗證
@@ -72,7 +83,8 @@ import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
 `JMoleculesArchitectureTest.shouldFollowOnionArchitecture` 呼叫 `JMoleculesArchitectureRules.ensureOnionClassical()` 驗證依賴方向。本專案此測試**通過**（無非預期違規）。
 
 ```java
-@ArchTest
-ArchRule shouldFollowOnionArchitecture =
-    JMoleculesArchitectureRules.ensureOnionClassical();
+@Test
+void shouldFollowOnionArchitecture() {
+    JMoleculesArchitectureRules.ensureOnionClassical().check(classes);
+}
 ```
