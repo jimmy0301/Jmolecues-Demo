@@ -9,6 +9,7 @@
 | 語言 / 平台 | Java | 17 |
 | 框架 | Spring Boot | 3.5.14 |
 | Web | Spring Boot Starter Web | — |
+| API 規格 | OpenAPI Generator Maven Plugin | 7.12.0 |
 | 資料庫 | Spring Data MongoDB | — |
 | DDD Annotations | jMolecules DDD | BOM 2025.0.2 |
 | DDD Events | jMolecules Events | BOM 2025.0.2 |
@@ -25,23 +26,33 @@
 ## Bounded Context（Onion Architecture — Classical）
 ```
 com.example.demo
-├── shared/             Shared Kernel → Money, ProductId, CustomerId
+├── shared/                  Shared Kernel → Money
 ├── catalog/
-│   ├── domain/         @DomainModelRing   → Product, ProductRepository
-│   └── MutablePrice    ⚠️ violation demo
+│   ├── domain/              @DomainModelRing   → Product, ProductId, ProductRepository
+│   ├── application/         @ApplicationServiceRing → ProductQueryModel
+│   ├── infrastructure/web/  @InfrastructureRing → ProductController
+│   └── MutablePrice         ⚠️ violation demo
 ├── customer/
-│   └── domain/         @DomainModelRing   → Customer, Address, CustomerRepository
+│   ├── domain/              @DomainModelRing   → Customer, CustomerId, Address, CustomerRepository
+│   ├── application/         @ApplicationServiceRing → CustomerService, CustomerQueryModel, CreateCustomerCommand
+│   └── infrastructure/web/  @InfrastructureRing → CustomerController
 └── ordering/
-    ├── domain/         @DomainModelRing   → Order, OrderId, OrderItem, OrderRepository, events…
-    ├── domainservice/  @DomainServiceRing → PricingService
-    ├── application/    @ApplicationServiceRing → OrderService, OrderEventListener
-    ├── BadOrder        ⚠️ violation demo
-    └── OrderItemRepository ⚠️ violation demo
+    ├── domain/              @DomainModelRing   → Order, OrderId, OrderItem, OrderRepository
+    │                                             CustomerReference, ProductReference, events…
+    ├── domainservice/       @DomainServiceRing → PricingService
+    ├── application/         @ApplicationServiceRing → OrderService, OrderQueryModel, OrderEventListener
+    │                                                   commands/
+    ├── infrastructure/web/  @InfrastructureRing → OrderController
+    ├── BadOrder             ⚠️ violation demo
+    ├── OrderItemRepository  ⚠️ violation demo
+    ├── BadCommand           ⚠️ violation demo
+    ├── BadDomainHandler     ⚠️ violation demo
+    └── BadQueryModel        ⚠️ violation demo
 ```
 
 ## 核心規則（詳見 .claude/rules/）
 - 每個 building block 加對應 jMolecules annotation（不可省略）
-- 跨 Context 只允許 ID 參照，不可持有 Aggregate 物件
+- 跨 Context 用 Reference Object（`@ValueObject record XxxReference(UUID id)`），不 import 對方型別、不持有 Aggregate 物件
 - Repository 只為 AggregateRoot 建立
 - ValueObject / Command 必須不可變（record 或 final fields）
 - @Command 放在 `application.command` 套件；@CommandHandler 只在 `application` 層
