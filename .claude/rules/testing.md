@@ -55,6 +55,7 @@ paths:
 | `commandsShouldResideInCommandPackage` | `BadCommand`（放在 context root，非 `application.command`） |
 | `commandHandlersShouldBeInApplicationLayer` | `BadDomainHandler`（`@CommandHandler` 在 context root） |
 | `shouldFollowOnionArchitecture` | **通過**（無預期失敗） |
+| `ModularityTest#verifiesModularStructure` | `BadOrder`（持有 `Customer`）、`BadCommand`（直接 import `customer.domain.CustomerId`） |
 
 新增的 class 若造成上表以外的測試失敗，代表真正的架構違規，需要修正。
 
