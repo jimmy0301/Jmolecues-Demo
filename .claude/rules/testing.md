@@ -41,6 +41,23 @@ paths:
 - `JMoleculesArchitectureRules.ensureOnionClassical()` → 直接 `.check(classes)` 即可
 - `JMoleculesCqrsRules` 不存在（v0.33.0），CQRS 規則需手寫 `ArchCondition`
 
+### 預期失敗對照表
+
+以下失敗是刻意保留的 violation demo，**不要修復**：
+
+| 測試方法 | 預期失敗原因（violation demo） |
+|---|---|
+| `shouldFollowDddRules` | `BadOrder`（持有 `Customer` 物件）、`MutablePrice`（`@ValueObject` 可變） |
+| `repositoriesShouldOnlyManageAggregateRoots` | `OrderItemRepository`（管理非 AggregateRoot 的 Entity） |
+| `valueObjectsShouldBeImmutable` | `MutablePrice`（有 setter） |
+| `commandsShouldBeImmutable` | `BadCommand`（non-final 欄位） |
+| `queryModelsShouldNotTriggerCommands` | `BadQueryModel`（`@QueryModel` 呼叫 `@CommandHandler`） |
+| `commandsShouldResideInCommandPackage` | `BadCommand`（放在 context root，非 `application.command`） |
+| `commandHandlersShouldBeInApplicationLayer` | `BadDomainHandler`（`@CommandHandler` 在 context root） |
+| `shouldFollowOnionArchitecture` | **通過**（無預期失敗） |
+
+新增的 class 若造成上表以外的測試失敗，代表真正的架構違規，需要修正。
+
 ## Spring Modulith — ModularityTest
 
 - `verifiesModularStructure` — 驗證模組邊界；若有 violation demo 刻意違反邊界，預期失敗
