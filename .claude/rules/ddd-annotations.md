@@ -28,13 +28,13 @@ Entity 需要同時使用 annotation **和** typed interface，兩者缺一不�
 public class OrderItem implements Entity<Order, OrderItemId> {  // typed interface（給 Spring Modulith 辨識所屬 Aggregate）
 
     private OrderItemId id = OrderItemId.create();  // 不加 @Id（不是 MongoDB document root）
-    private ProductId productId;
+    private ProductReference product;  // 跨 Context 參照用 Reference Object，不 import ProductId
     private Quantity quantity;
     private Money unitPrice;
 
     protected OrderItem() {}  // MongoDB 反序列化用
 
-    public OrderItem(ProductId productId, Quantity quantity, Money unitPrice) { ... }
+    public OrderItem(UUID productId, Quantity quantity, Money unitPrice) { ... }
 }
 ```
 
@@ -74,7 +74,7 @@ public class Order {
 
 // 3. OrderItemRepository 成為合法的 Repository
 @Repository
-public interface OrderItemRepository extends CrudRepository<OrderItem, OrderItemId> {}
+public interface OrderItemRepository extends MongoRepository<OrderItem, OrderItemId> {}
 ```
 
 **影響：**
@@ -121,8 +121,8 @@ public record OrderId(@Identity UUID id) implements Identifier {
 - `@ValueObject` 標記 record，`@Identity` 標記 UUID 欄位
 - 實作 `org.jmolecules.ddd.types.Identifier`
 - AggregateRoot 和 Entity 都需要各自的 ID class
-- **只在自己 Context 內使用** → 放在該 Context 的 `domain` package
-- **被其他 Context 當作跨 Context 參照** → 放在 shared kernel package（見 `bounded-context.md`）
+- 永遠放在**自己 Context 的 `domain` package**，不進 shared kernel
+- 其他 Context 需要參照時，在自己的 `domain/` 定義 Reference Object（`@ValueObject record XxxReference(UUID id)`），不 import 此 ID class（見 `bounded-context.md`）
 
 ## ValueObject
 ```java
@@ -163,19 +163,21 @@ public void on(OrderPlaced event) { ... }
   - Spring Modulith 模組文件整合
 - 兩者語意相同，擇一使用，**不要同時標記**
 
-## Association（跨 Aggregate 參照）
-```java
-// jMolecules 提供兩種跨 Aggregate 參照方式，擇一即可
-// 方式 A — 純 ID（本專案採用）
-private CustomerId customerId;
+## 跨 Context 參照（Reference Object）
 
-// 方式 B — Association wrapper（提供更強的型別語意）
-private Association<Customer, CustomerId> customer;
+本專案用 Reference Object 取代直接 ID 參照或 `Association<T,ID>`：
+
+```java
+// ✅ 本專案做法：在 ordering/domain/ 定義 Reference，UUID 不帶框架語意
+@ValueObject public record CustomerReference(UUID id) {}
+@ValueObject public record ProductReference(UUID id) {}
 ```
-- `Association<T, ID>` 位於 `org.jmolecules.ddd.types.Association`
-- 官方 ArchUnit 規則 `aggregateReferencesShouldBeViaIdOrAssociation()` 兩種都接受
-- 本專案採**純 ID 方式**，理由：更簡潔，MongoDB document 直接儲存 UUID，不需要額外的 wrapper 序列化設定
-- 若日後需要強調「這個欄位是跨 Aggregate 的 Association」語意，可改用 `Association<T, ID>`
+
+**為何不用 `CustomerId` 直接存：**
+- `CustomerId implements Identifier` → ByteBuddy 對欄位加 `@Id` → `Order` 出現兩個 `@Id`（`OrderId` + `CustomerReference`），MongoDB 啟動時 `MappingException`
+
+**為何不用 `Association<Customer, CustomerId>`：**
+- jMolecules ArchUnit DDD rules（v2025.0.2）掃描泛型型別參數，把 `T=Customer`（implements `AggregateRoot`）誤判為「直接持有 AggregateRoot」，產生誤報，且無法簡單關閉此規則
 
 ## DomainService
 ```java
