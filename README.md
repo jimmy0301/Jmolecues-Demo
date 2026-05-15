@@ -19,7 +19,13 @@
    — 核心概念、Command vs Query、執行流程圖  
    &nbsp;&nbsp;&nbsp;&nbsp;↳ [CQRS 實作說明](docs/03-cqrs-impl.md) — jMolecules annotations、程式碼範例、violation demo
 
-4. [技術棧說明](docs/02-tech-stack.md)  
+4. [CQRS — 命令與查詢分離](docs/03-cqrs.md) *(重複編號修正見下方)*
+
+5. [Bounded Context 邊界與跨 Context 溝通](docs/05-bounded-context.md)  
+   — ID 參照、Reference 物件模式、Shared Kernel 判斷準則  
+   &nbsp;&nbsp;&nbsp;&nbsp;↳ [Bounded Context 實作說明](docs/05-bounded-context-impl.md) — CustomerReference、ProductReference、ArchUnit 驗證
+
+6. [技術棧說明](docs/02-tech-stack.md)  
    — 採用的框架與工具、各自的職責與選擇理由
 
 ---
