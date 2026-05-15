@@ -103,7 +103,6 @@ public class OrderSummaryView {
 
 | Class | 違規 | 觸發測試 |
 |---|---|---|
-| [`BadCommand`](../src/main/java/com/example/demo/ordering/BadCommand.java) | `@Command` 有 public 可變欄位 | `commandsShouldBeImmutable` |
-| [`BadCommand`](../src/main/java/com/example/demo/ordering/BadCommand.java) | `@Command` 放在 context root，非 `application.command` | `commandsShouldResideInCommandPackage` |
+| [`BadCommand`](../src/main/java/com/example/demo/ordering/BadCommand.java) | ① `@Command` 有 public 可變欄位；② 放在 context root 而非 `application.command` | `commandsShouldBeImmutable`、`commandsShouldResideInCommandPackage` |
 | [`BadQueryModel`](../src/main/java/com/example/demo/ordering/BadQueryModel.java) | `@QueryModel` 呼叫 `@CommandHandler` | `queryModelsShouldNotTriggerCommands` |
 | [`BadDomainHandler`](../src/main/java/com/example/demo/ordering/BadDomainHandler.java) | `@CommandHandler` 在 domain 層 | `commandHandlersShouldBeInApplicationLayer` |

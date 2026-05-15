@@ -197,7 +197,7 @@ public class BadOrder {
 
 | Class | 違規 | 正確做法 | 觸發測試 |
 |---|---|---|---|
-| [`BadOrder`](../src/main/java/com/example/demo/ordering/BadOrder.java) | 直接持有 `Customer` 物件 | 改用 `CustomerId` | ArchUnit `shouldFollowDddRules`、Spring Modulith `verifiesModularStructure` |
+| [`BadOrder`](../src/main/java/com/example/demo/ordering/BadOrder.java) | 直接持有 `Customer` 物件 | 改用 `CustomerReference(UUID)` | ArchUnit `shouldFollowDddRules`、Spring Modulith `verifiesModularStructure` |
 | [`OrderItemRepository`](../src/main/java/com/example/demo/ordering/OrderItemRepository.java) | `@Repository` 管理 Entity（非 AggregateRoot） | Repository 只為 AggregateRoot 建立 | ArchUnit `repositoriesShouldOnlyManageAggregateRoots` |
 | [`MutablePrice`](../src/main/java/com/example/demo/catalog/MutablePrice.java) | `@ValueObject` 有 setter（可變） | 改用 `record` | ArchUnit `valueObjectsShouldBeImmutable` |
 
