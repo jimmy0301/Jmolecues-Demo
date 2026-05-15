@@ -26,7 +26,7 @@ arguments:
 
 ```java
 @DomainEvent  // org.jmolecules.event.annotation.DomainEvent
-public record <EventName>(<AggregateRoot>Id id, Instant occurredOn) {}
+public record <EventName>(<AggregateRoot>Id <aggregateRootId>, Instant occurredOn) {}
 ```
 
 - 命名用**過去式**（OrderPlaced、CustomerRegistered）

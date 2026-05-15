@@ -138,14 +138,16 @@ public class <ServiceName> {
         this.events = events;
     }
 
-    // Use Case：建立
-    public <AggregateRoot> create<AggregateRoot>(...) {
-        return repository.save(new <AggregateRoot>(...));
+    // Use Case：建立（接受 @Command 作為參數，方法加 @CommandHandler）
+    @CommandHandler  // org.jmolecules.architecture.cqrs.CommandHandler
+    public <AggregateRoot> handle(Create<AggregateRoot>Command command) {
+        return repository.save(new <AggregateRoot>(command.<field>()));
     }
 
     // Use Case：狀態變更 + 發布 Event
-    public <AggregateRoot> <action>(<AggregateRoot>Id id) {
-        <AggregateRoot> aggregate = findOrThrow(id);
+    @CommandHandler
+    public <AggregateRoot> handle(<Action><AggregateRoot>Command command) {
+        <AggregateRoot> aggregate = findOrThrow(command.id());
         events.publishEvent(aggregate.<action>());   // producer 方法回傳 event
         return repository.save(aggregate);
     }

@@ -27,7 +27,7 @@ Repository interface 直接繼承 Spring Data，省去寫 infrastructure 實作�
 // <context>/<AggregateName>Repository.java
 @Repository  // org.jmolecules.ddd.annotation.Repository
 public interface <AggregateName>Repository
-        extends CrudRepository<<AggregateName>, <AggregateName>Id> {
+        extends MongoRepository<<AggregateName>, <AggregateName>Id> {
 
     List<<AggregateName>> findByCustomerId(CustomerId customerId);
 }

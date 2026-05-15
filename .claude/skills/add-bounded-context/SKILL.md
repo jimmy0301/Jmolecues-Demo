@@ -16,13 +16,16 @@ arguments:
 
 ```
 src/main/java/<base-package>/<context-name>/
-├── package-info.java          @BoundedContext
-├── CLAUDE.md                  per-context 說明
-└── domain/
-    └── package-info.java      @DomainModelRing
+├── package-info.java                    @BoundedContext
+├── CLAUDE.md                            per-context 說明
+├── domain/
+│   └── package-info.java               @DomainModelRing
+└── infrastructure/
+    └── web/
+        └── package-info.java           @InfrastructureRing（Controller 放這裡時建立）
 ```
 
-`application/` 和 `domainservice/` 等 ring 在有對應 class 時才建立。
+`application/`、`domainservice/`、`infrastructure/web/` 等 ring 在有對應 class 時才建立。
 
 ## 步驟
 
