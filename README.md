@@ -45,7 +45,7 @@ mvn test -Dtest=ModularityTest
 | 測試 | 結果 | 說明 |
 |---|---|---|
 | `JMoleculesArchitectureTest`（8 tests） | 7 失敗 / 1 通過 | 7 個因 violation demo 刻意失敗；`shouldFollowOnionArchitecture` 通過 |
-| `ModularityTest#verifiesModularStructure` | 失敗 | `BadOrder` 持有跨 Context 的 `Customer` 物件（violation demo #1） |
+| `ModularityTest#verifiesModularStructure` | 失敗 | `BadOrder` 持有跨 Context 的 `Customer` 物件；`BadCommand` 直接 import `customer.domain.CustomerId`（violation demo #1、#4） |
 | `ModularityTest#documentModules` | 通過 | 產生模組文件到 `target/spring-modulith-docs/` |
 
 ---
