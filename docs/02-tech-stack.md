@@ -154,9 +154,9 @@ ArchUnit 的 immutability 規則用**非 final 欄位**偵測可變性，
 
 ## 建置流程
 
-```
-mvn validate        → Spotless 格式檢查
-mvn compile         → Java 編譯
-mvn process-classes → ByteBuddy 注入（equals/hashCode/MutablePersistable）
-mvn test            → ArchUnit + Spring Modulith + 其他單元測試
+```mermaid
+graph LR
+    V["validate\nSpotless 格式檢查"] --> C["compile\nJava 編譯"]
+    C --> P["process-classes\nByteBuddy 注入\nequals/hashCode/MutablePersistable"]
+    P --> T["test\nArchUnit\nSpring Modulith\n單元測試"]
 ```
