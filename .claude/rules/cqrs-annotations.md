@@ -21,14 +21,14 @@ paths:
 ## 規則 #4：@Command 必須不可變
 
 ```java
-// ✅ 正確：record（天生不可變）
+// ✅ 正確：record（天生不可變）；跨 Context 用 UUID，不 import 其他 Context 的 ID 型別
 @Command
-public record CreateOrderCommand(CustomerId customerId) {}
+public record CreateOrderCommand(UUID customerId) {}
 
 // ❌ 違規：non-final field（BadCommand）
 @Command
 public class BadCommand {
-    public CustomerId customerId; // 可被外部修改
+    public CustomerId customerId; // 可被外部修改（且直接 import customer.domain.CustomerId，違反模組邊界）
 }
 ```
 
@@ -49,7 +49,7 @@ public class OrderSummaryView {
 // ❌ 違規：query 內呼叫 @CommandHandler（BadQueryModel）
 @QueryModel
 public class BadQueryModel {
-    public Order findOrCreate(CustomerId customerId) {
+    public Order findOrCreate(UUID customerId) {
         return orderService.handle(new CreateOrderCommand(customerId)); // 觸發 side effect
     }
 }

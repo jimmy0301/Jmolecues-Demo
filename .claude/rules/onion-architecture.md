@@ -45,6 +45,14 @@ package com.example.myapp.somecontext.application;
 import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
 ```
 
+```java
+// <context>/infrastructure/web/package-info.java
+@InfrastructureRing
+package com.example.myapp.somecontext.infrastructure.web;
+
+import org.jmolecules.architecture.onion.classical.InfrastructureRing;
+```
+
 ## 依賴方向規則
 
 依賴只能由外往內，內層不可依賴外層：
