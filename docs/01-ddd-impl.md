@@ -15,7 +15,7 @@
 | **Repository** | [`OrderRepository`](../src/main/java/com/example/demo/ordering/domain/OrderRepository.java)、[`ProductRepository`](../src/main/java/com/example/demo/catalog/domain/ProductRepository.java) |
 | **Domain Service** | [`PricingService`](../src/main/java/com/example/demo/ordering/domainservice/PricingService.java) |
 | **Bounded Context** | `catalog`、`customer`、`ordering` |
-| **Shared Kernel** | [`shared/`](../src/main/java/com/example/demo/shared/)（`Money`、`ProductId`、`CustomerId`） |
+| **Shared Kernel** | [`shared/`](../src/main/java/com/example/demo/shared/)（`Money`） |
 
 ---
 
@@ -23,13 +23,12 @@
 
 ```mermaid
 graph TD
-    shared["shared（Shared Kernel）\nMoney / ProductId / CustomerId"]
-    ordering["ordering\nOrder / OrderItem\nPricingService"]
-    catalog["catalog\nProduct"]
-    customer["customer\nCustomer / Address"]
+    shared["shared（Shared Kernel）\nMoney"]
+    catalog["catalog\nProduct / ProductId"]
+    customer["customer\nCustomer / CustomerId"]
+    ordering["ordering\nOrder / OrderItem\nCustomerReference / ProductReference"]
 
     catalog -->|使用| shared
-    customer -->|使用| shared
     ordering -->|使用| shared
 ```
 
@@ -38,10 +37,11 @@ graph TD
 | 型別 | 說明 | 使用於 |
 |---|---|---|
 | `Money` | 金額 VO，帶幣別與不可變計算 | `catalog`（Product 定價）、`ordering`（OrderItem、PricingService） |
-| `ProductId` | 商品識別碼 | `catalog`（Product ID）、`ordering`（OrderItem 跨 Context 參照） |
-| `CustomerId` | 顧客識別碼 | `customer`（Customer ID）、`ordering`（Order、CreateOrderCommand 跨 Context 參照） |
 
 `Money` 若留在 `catalog.domain`，`ordering` 就必須依賴 `catalog` 的內部 package——Spring Modulith 會偵測為模組邊界違規。移至 Shared Kernel 後，雙方都可合法使用。
+
+**ID 的歸屬：** 每個 Context 的 ID 型別放在自己的 `domain/` package，不進 Shared Kernel。  
+`ordering` 不直接使用 `CustomerId` 或 `ProductId`，而是透過 Reference 物件間接參照（見下方）。
 
 ---
 
@@ -138,15 +138,51 @@ public Order handle(PlaceOrderCommand command) {
 
 ## 跨 Context 邊界
 
+`ordering` 需要記錄「這筆訂單屬於哪個顧客」、「這個訂單項目是哪個商品」，  
+但 `ordering.domain` **不 import** 任何其他 Context 的型別。
+
+### Reference 物件
+
+在 `ordering/domain/` 定義兩個包裝 UUID 的 `@ValueObject`：
+
 ```java
-// ✅ 正確：Order 只持有 CustomerId（ID 參照）
-public class Order {
-    private CustomerId customerId;
+@ValueObject public record CustomerReference(UUID id) {}
+@ValueObject public record ProductReference(UUID id) {}
+```
+
+**不實作 `Identifier` 的原因**：jMolecules ByteBuddy 會對所有實作 `Identifier` 的欄位加上 `@Id`。  
+若 `CustomerReference implements Identifier`，`Order` 裡就有兩個 `@Id`（`OrderId` + `CustomerReference`），MongoDB 啟動時會拋出 `MappingException`。
+
+**不用 `Association<Customer, CustomerId>` 的原因**：jMolecules ArchUnit DDD rules（v2025.0.2）會掃描泛型型別參數，  
+把 `Association<Customer, CustomerId>` 中的 `Customer`（implements `AggregateRoot`）誤判為「直接持有 AggregateRoot」，產生誤報。
+
+### 使用方式
+
+```java
+// Order — 接受 UUID，包裝成 CustomerReference
+public Order(UUID customerId) {
+    this.customer = new CustomerReference(customerId);
 }
 
-// ❌ 違規：直接持有 Customer 物件（見 BadOrder.java）
+// OrderItem — 接受 UUID，包裝成 ProductReference
+public OrderItem(UUID productId, Quantity quantity, Money unitPrice) {
+    this.product = new ProductReference(productId);
+}
+```
+
+應用層（Command、Controller）直接使用 `UUID`，不需 import 其他 Context 的型別：
+
+```java
+@Command
+public record CreateOrderCommand(UUID customerId) {}
+```
+
+### 違規展示
+
+```java
+// ❌ BadOrder.java — 直接持有 Customer 物件（跨越邊界）
 public class BadOrder {
-    private Customer customer;  // 跨越邊界，兩個 Context 緊耦合
+    private Customer customer;  // ordering 與 customer 緊耦合
 }
 ```
 

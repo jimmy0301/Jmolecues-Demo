@@ -34,10 +34,30 @@ DDD 定義了幾種戰術模式（Tactical Patterns），用來組織領域物�
 ### Bounded Context — 業務邊界
 
 每個 Bounded Context 是一個獨立的業務子域，有自己的模型與語言。  
-Context 之間只能透過 ID 或 Domain Event 溝通，不允許直接持有對方的物件。
+Context 之間只能透過 **ID 參照** 或 **Domain Event** 溝通，不允許直接持有對方的物件。
 
-**跨 Context 持有物件的後果：**  
-若 `ordering` 直接持有 `Customer` 物件，當 `customer` Context 的結構改變，`ordering` 也必須同步修改——兩個原本獨立的業務域就綁死了。
+**跨 Context 持有物件的後果：**
+- **結構耦合**：`ordering` 持有 `Customer` 物件，`customer` 結構一改，`ordering` 跟著壞
+- **語義衝突**：`Customer` 在 `ordering` 眼中是「下單的人」，在 `customer` 眼中是「有地址的帳戶」——同名不同義
+- **部署耦合**：兩個業務域無法獨立演進
+
+#### 跨 Context 溝通方式
+
+**方式 A — ID 參照（Reference Object）**  
+只儲存對方 Aggregate 的識別碼，不持有物件。raw `UUID` 缺乏語義，可在自己的 domain 定義 **Reference 物件**（包裝 UUID 的 `@ValueObject`）：
+
+```
+ordering/domain/
+  CustomerReference(UUID id)  ← ordering 對顧客的參照
+  ProductReference(UUID id)   ← ordering 對商品的參照
+```
+
+**方式 B — Domain Event**  
+Context A 發布事件，Context B 監聽後在自己的模型中處理——兩邊只需對事件結構達成協議，是最鬆耦合的方式：
+
+```
+ordering ──publishes──▶ OrderPlaced ──consumed by──▶ inventory
+```
 
 ### Shared Kernel — 協議共用的型別
 
