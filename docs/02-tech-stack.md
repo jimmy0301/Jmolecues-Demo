@@ -78,11 +78,10 @@ void repositoriesShouldOnlyManageAggregateRoots() {
 
 **解法**：ByteBuddy Maven Plugin 在 `process-classes` 階段自動為有 jMolecules annotation 的 class 產生這些實作：
 
-```
-編譯順序：
-compile → process-classes（ByteBuddy 注入程式碼）→ test
-                ↑
-         jmolecules-bytebuddy-nodep 在這裡執行
+```mermaid
+graph LR
+    C[compile] --> P["process-classes\njmolecules-bytebuddy-nodep\n注入 equals/hashCode/MutablePersistable"]
+    P --> T[test]
 ```
 
 你只需要寫業務邏輯，`equals()`/`hashCode()` 自動產生。
