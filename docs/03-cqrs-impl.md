@@ -23,6 +23,7 @@
 ordering/
   application/
     OrderService.java          ← @CommandHandler methods
+    OrderQueryModel.java       ← @QueryModel
     command/
       CreateOrderCommand.java  ← @Command
       PlaceOrderCommand.java   ← @Command
@@ -88,9 +89,13 @@ public class OrderService {
 ```java
 // ✅ 正確：只讀
 @QueryModel
-public class OrderSummaryView {
-    public Order findById(OrderId id) {
-        return orderRepository.findById(id).orElseThrow();
+@Service
+public class OrderQueryModel {
+    public Optional<Order> findById(OrderId id) {
+        return orderRepository.findById(id);
+    }
+    public List<Order> findAll() {
+        return orderRepository.findAll();
     }
 }
 ```
