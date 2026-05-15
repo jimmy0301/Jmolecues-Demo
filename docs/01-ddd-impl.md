@@ -47,24 +47,7 @@ graph TD
 
 ## Onion Architecture 分層
 
-```mermaid
-graph TD
-    subgraph app["ApplicationService Ring　@ApplicationServiceRing"]
-        subgraph ds["DomainService Ring　@DomainServiceRing"]
-            subgraph dm["DomainModel Ring　@DomainModelRing"]
-                D["Order · OrderItem\nOrderPlaced · OrderCancelled\nOrderRepository"]
-            end
-            S["PricingService"]
-        end
-        A["OrderService\nCreateOrderCommand · PlaceOrderCommand · CancelOrderCommand"]
-    end
-```
-
-| 層 | Annotation | 本專案 class |
-|---|---|---|
-| DomainModel | `@DomainModelRing` | `Order`、`OrderItem`、`OrderPlaced`、`OrderRepository` |
-| DomainService | `@DomainServiceRing` | `PricingService` |
-| ApplicationService | `@ApplicationServiceRing` | `OrderService`、`*Command` |
+→ 本專案的 ring annotation 與分層結構見 [Onion Architecture 實作說明](04-onion-impl.md)
 
 ---
 
@@ -108,7 +91,7 @@ ordering/domain/OrderStatus.java
 它把「我發生了什麼事」包成事件回傳，由 `OrderService` 決定怎麼處理。
 
 ```java
-@DomainEventHandler
+// 不加 annotation — producer 方法只負責更新狀態並回傳 event
 public OrderPlaced place() {
     if (status != OrderStatus.PENDING) {
         throw new IllegalStateException("Order is already " + status);

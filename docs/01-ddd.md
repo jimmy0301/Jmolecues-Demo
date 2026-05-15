@@ -51,23 +51,9 @@ Shared Kernel 是 Bounded Context 規則的例外：
 
 ### Onion Architecture — 洋蔥分層
 
-每個 Bounded Context 內部以環狀分層，依賴方向**只能由外往內**：
+Onion Architecture 定義每個 Bounded Context 內部的分層規則，依賴方向**只能由外往內**，最內層純業務邏輯不依賴任何框架。
 
-```
-┌─────────────────────────────────────────┐
-│  ApplicationService（最外層）            │ ← 協調者：連接外部請求與領域邏輯
-│  ┌───────────────────────────────────┐  │
-│  │  DomainService                    │  │ ← 跨 Aggregate 的領域邏輯
-│  │  ┌─────────────────────────────┐  │  │
-│  │  │  DomainModel（最內層）       │  │  │ ← 純業務邏輯，不依賴框架
-│  │  └─────────────────────────────┘  │  │
-│  └───────────────────────────────────┘  │
-└─────────────────────────────────────────┘
-```
-
-- **DomainModel**：Aggregate、Entity、Value Object、Domain Event、Repository 介面
-- **DomainService**：跨 Aggregate 的計算邏輯（例如定價），不知道外層存在
-- **ApplicationService**：協調 Repository、發布 Event，是領域邏輯對外的入口
+→ 詳細說明見 [Chapter 4：Onion Architecture](04-onion.md)
 
 ---
 

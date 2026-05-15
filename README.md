@@ -8,14 +8,18 @@
 ## 章節
 
 1. [Domain-Driven Design 核心概念](docs/01-ddd.md)  
-   — Building blocks 定義、Bounded Context、Shared Kernel、Onion Architecture  
+   — Building blocks 定義、Bounded Context、Shared Kernel  
    &nbsp;&nbsp;&nbsp;&nbsp;↳ [DDD 實作說明](docs/01-ddd-impl.md) — 本專案對照表、學習路徑、violation demo
 
-2. [CQRS — 命令與查詢分離](docs/03-cqrs.md)  
+2. [Onion Architecture — 洋蔥分層](docs/04-onion.md)  
+   — 四個 Ring 職責、依賴方向規則  
+   &nbsp;&nbsp;&nbsp;&nbsp;↳ [Onion Architecture 實作說明](docs/04-onion-impl.md) — Ring annotation、package-info.java、ArchUnit 驗證
+
+3. [CQRS — 命令與查詢分離](docs/03-cqrs.md)  
    — 核心概念、Command vs Query、執行流程圖  
    &nbsp;&nbsp;&nbsp;&nbsp;↳ [CQRS 實作說明](docs/03-cqrs-impl.md) — jMolecules annotations、程式碼範例、violation demo
 
-3. [技術棧說明](docs/02-tech-stack.md)  
+4. [技術棧說明](docs/02-tech-stack.md)  
    — 採用的框架與工具、各自的職責與選擇理由
 
 ---
@@ -47,6 +51,4 @@ mvn test -Dtest=ModularityTest
 ---
 
 ## 延伸閱讀
-
-- [`docs/domain-model.md`](docs/domain-model.md) — 各 Context 的 Ubiquitous Language 與業務規則
 - [`docs/adr/001-use-jmolecules.md`](docs/adr/001-use-jmolecules.md) — 為何選擇 jMolecules 的架構決策記錄
