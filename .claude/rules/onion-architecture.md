@@ -1,4 +1,4 @@
-ㄥ---
+---
 description: jMolecules Onion Architecture Classical 分層 annotation 規則，編輯 package-info.java 時參照
 paths:
   - src/main/java/**/package-info.java

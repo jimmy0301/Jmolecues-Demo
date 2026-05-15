@@ -5,7 +5,7 @@ paths:
   - src/main/java/**/*.java
 ---
 
-# ㄎ
+# 
 
 ## AggregateRoot
 ```java

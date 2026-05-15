@@ -193,6 +193,26 @@
                 </executions>
             </plugin>
 
+            <!-- 將 generated-sources 加入 IDE source root -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-generated-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/openapi/src/main/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- OpenAPI Generator — 從 YAML 生成 Spring server interface -->
             <plugin>
                 <groupId>org.openapitools</groupId>
