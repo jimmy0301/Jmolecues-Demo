@@ -32,16 +32,17 @@ graph TD
     ordering -->|使用| shared
 ```
 
-**Shared Kernel 的內容：**
+**型別歸屬：**
 
-| 型別 | 說明 | 使用於 |
+| 型別 | 位置 | 說明 |
 |---|---|---|
-| `Money` | 金額 VO，帶幣別與不可變計算 | `catalog`（Product 定價）、`ordering`（OrderItem、PricingService） |
+| `Money` | `shared/` | 金額 VO；`catalog` 定價、`ordering` 訂單項目都需要，語義完全一致 → 放 Shared Kernel |
+| `CustomerId` | `customer/domain/` | customer context 自用；`ordering` 不 import，改用 `CustomerReference(UUID)` |
+| `ProductId` | `catalog/domain/` | catalog context 自用；`ordering` 不 import，改用 `ProductReference(UUID)` |
 
 `Money` 若留在 `catalog.domain`，`ordering` 就必須依賴 `catalog` 的內部 package——Spring Modulith 會偵測為模組邊界違規。移至 Shared Kernel 後，雙方都可合法使用。
 
-**ID 的歸屬：** 每個 Context 的 ID 型別放在自己的 `domain/` package，不進 Shared Kernel。  
-`ordering` 不直接使用 `CustomerId` 或 `ProductId`，而是透過 Reference 物件間接參照（見下方）。
+`CustomerId` / `ProductId` 語義上屬於各自的 Context，不放 Shared Kernel。`ordering` 透過 Reference 物件（見下方）以 UUID 參照，完全不 import 其他 Context 的型別。
 
 ---
 
