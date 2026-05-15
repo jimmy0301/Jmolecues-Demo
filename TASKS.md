@@ -17,12 +17,14 @@
 - [x] `package-info.java`（`@BoundedContext`）— catalog, customer, ordering
 - [x] Onion Architecture — `@DomainModelRing` / `@DomainServiceRing` / `@ApplicationServiceRing`
 - [x] CLAUDE.md 拆解 — rules / skills / per-context CLAUDE.md
+- [x] OpenAPI YAML spec + openapi-generator（catalog, customer, ordering）
+- [x] REST API controller（ProductController, CustomerController, OrderController）
+- [x] QueryModel（ProductQueryModel, CustomerQueryModel, OrderQueryModel）
+- [x] `@InfrastructureRing` — catalog / customer / ordering web package
 
 ## 待辦
 
-- [ ] REST API controller（catalog, ordering, customer）
-- [ ] OpenAPI YAML spec + openapi-generator
-- [ ] `@InfrastructureRing` — 待 controller / infrastructure 實作後補上
+（全部完成）
 
 ## 詳細任務
 
