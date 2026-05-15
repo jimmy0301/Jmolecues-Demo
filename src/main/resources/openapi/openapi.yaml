@@ -1,0 +1,35 @@
+openapi: 3.0.3
+info:
+  title: jMolecules DDD Demo API
+  version: 1.0.0
+  description: |
+    電商 DDD demo 的 REST API，涵蓋三個 Bounded Context：
+    - **catalog** — 商品目錄（read-only）
+    - **customer** — 顧客管理
+    - **ordering** — 訂單生命週期（CQRS）
+
+tags:
+  - name: Products
+    description: catalog context — 商品目錄
+  - name: Customers
+    description: customer context — 顧客管理
+  - name: Orders
+    description: ordering context — 訂單管理
+
+paths:
+  /products:
+    $ref: "./catalog.yaml#/paths/~1products"
+  /products/{id}:
+    $ref: "./catalog.yaml#/paths/~1products~1{id}"
+  /customers:
+    $ref: "./customer.yaml#/paths/~1customers"
+  /customers/{id}:
+    $ref: "./customer.yaml#/paths/~1customers~1{id}"
+  /orders:
+    $ref: "./ordering.yaml#/paths/~1orders"
+  /orders/{id}:
+    $ref: "./ordering.yaml#/paths/~1orders~1{id}"
+  /orders/{id}/place:
+    $ref: "./ordering.yaml#/paths/~1orders~1{id}~1place"
+  /orders/{id}/cancel:
+    $ref: "./ordering.yaml#/paths/~1orders~1{id}~1cancel"

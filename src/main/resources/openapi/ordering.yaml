@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Ordering API
+  version: 1.0.0
+tags:
+  - name: Orders
+    description: 訂單管理
+
+paths:
+  /orders:
+    post:
+      tags: [Orders]
+      operationId: createOrder
+      summary: 建立訂單
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: 訂單建立成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      operationId: getOrderById
+      summary: 取得單一訂單
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 訂單資料
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "404":
+          description: 訂單不存在
+
+  /orders/{id}/place:
+    post:
+      tags: [Orders]
+      operationId: placeOrder
+      summary: 下單（PENDING → PLACED）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 下單成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "404":
+          description: 訂單不存在
+
+  /orders/{id}/cancel:
+    post:
+      tags: [Orders]
+      operationId: cancelOrder
+      summary: 取消訂單
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: 取消成功
+        "404":
+          description: 訂單不存在
+
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required: [customerId]
+      properties:
+        customerId:
+          type: string
+          format: uuid
+
+    OrderResponse:
+      type: object
+      required: [id, customerId, status, items]
+      properties:
+        id:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, PLACED, CANCELLED]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItemResponse"
+
+    OrderItemResponse:
+      type: object
+      required: [id, productId, quantity, unitPrice]
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+        unitPrice:
+          $ref: "#/components/schemas/Money"
+
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+          example: TWD

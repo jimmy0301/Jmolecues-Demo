@@ -1,0 +1,91 @@
+openapi: 3.0.3
+info:
+  title: Customer API
+  version: 1.0.0
+tags:
+  - name: Customers
+    description: 顧客管理
+
+paths:
+  /customers:
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: 建立顧客
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerRequest"
+      responses:
+        "201":
+          description: 顧客建立成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerResponse"
+
+  /customers/{id}:
+    get:
+      tags: [Customers]
+      operationId: getCustomerById
+      summary: 取得單一顧客
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 顧客資料
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerResponse"
+        "404":
+          description: 顧客不存在
+
+components:
+  schemas:
+    CustomerResponse:
+      type: object
+      required: [id, name, email, address]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          $ref: "#/components/schemas/AddressDto"
+
+    CreateCustomerRequest:
+      type: object
+      required: [name, email, address]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          $ref: "#/components/schemas/AddressDto"
+
+    AddressDto:
+      type: object
+      required: [street, city, postalCode, country]
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string

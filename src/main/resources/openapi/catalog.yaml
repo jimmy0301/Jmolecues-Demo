@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: Catalog API
+  version: 1.0.0
+tags:
+  - name: Products
+    description: 商品目錄管理
+
+paths:
+  /products:
+    get:
+      tags: [Products]
+      operationId: getProducts
+      summary: 列出所有商品
+      responses:
+        "200":
+          description: 商品列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductResponse"
+
+  /products/{id}:
+    get:
+      tags: [Products]
+      operationId: getProductById
+      summary: 取得單一商品
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 商品資料
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "404":
+          description: 商品不存在
+
+components:
+  schemas:
+    ProductResponse:
+      type: object
+      required: [id, name, price]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          $ref: "#/components/schemas/Money"
+
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+          example: TWD
