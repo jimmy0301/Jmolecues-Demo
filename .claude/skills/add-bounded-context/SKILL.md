@@ -59,13 +59,41 @@ src/main/java/<base-package>/<context-name>/
    [職責說明]
 
    ## Package 結構（Onion Architecture）
-   ...（依實際 ring 填寫）
+
+   ```
+   <context-name>/
+     package-info.java          @BoundedContext
+     domain/                    @DomainModelRing
+       <AggregateName>Id.java
+       <AggregateName>.java
+       <AggregateName>Repository.java
+     application/               @ApplicationServiceRing
+       <AggregateName>Service.java
+       <AggregateName>QueryModel.java
+       command/
+         Create<AggregateName>Command.java
+     infrastructure/web/        @InfrastructureRing
+       <AggregateName>Controller.java
+   ```
 
    ## Classes
+
    | Class | Ring | 類型 | 說明 |
+   |---|---|---|---|
+   | `<AggregateName>` | domain | AggregateRoot | ... |
+   | `<AggregateName>Id` | domain | ID / ValueObject | `@ValueObject record` implements `Identifier` |
+   | `<AggregateName>Repository` | domain | Repository | `MongoRepository<<AggregateName>, <AggregateName>Id>` |
+   | `<AggregateName>Service` | application | ApplicationService | `@CommandHandler` 處理 Command |
+   | `<AggregateName>QueryModel` | application | QueryModel | `@QueryModel` 只讀 |
+   | `Create<AggregateName>Command` | application/command | Command | `@Command` 封裝建立意圖 |
+   | `<AggregateName>Controller` | infrastructure | Controller | REST 端點 |
 
    ## 對外暴露
-   其他 Context 只能使用 `<AggregateName>Id`（或透過 shared kernel），不可直接依賴此 Context 的 domain sub-package。
+
+   其他 Context 不可 import `<AggregateName>Id`，改用 Reference Object：
+   ```java
+   @ValueObject public record <AggregateName>Reference(UUID id) {}
+   ```
    ```
 
 6. **更新根目錄 `CLAUDE.md` 的 Bounded Context 結構圖**

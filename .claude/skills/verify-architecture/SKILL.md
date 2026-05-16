@@ -30,5 +30,5 @@ mvn test -Dtest=ModularityTest
 **預期失敗（不需修復）：**
 
 預期失敗的測試對應專案中刻意保留的 violation demo class。
-判斷方式：查看 `docs/` 下的 violation demo 說明表格，標注為 violation demo 的失敗均屬預期行為，不需修復。
+判斷方式：查看 `.claude/rules/testing.md` 的「預期失敗對照表」，標注為 violation demo 的失敗均屬預期行為，不需修復。
 非預期失敗（不在 violation demo 清單內）才需要分析原因並修正。
