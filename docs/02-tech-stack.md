@@ -20,6 +20,9 @@
 | 模組事件 | Spring Modulith Events API | 1.3.5 | `@ApplicationModuleListener` |
 | 架構測試 | jMolecules ArchUnit | BOM 2025.0.2 | DDD / Onion 規則自動驗證 |
 | 架構測試 | Spring Modulith Test | 1.3.5 | 模組結構測試 |
+| 單元測試 | JUnit Jupiter | 5.12.2 | 單元測試框架（via spring-boot-starter-test） |
+| 單元測試 | AssertJ | 3.27.7 | Fluent assertion（via spring-boot-starter-test） |
+| 單元測試 | Mockito | 5.17.0 | Mock / Stub（via spring-boot-starter-test） |
 | 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 | 強制統一格式 |
 | 樣板程式碼 | Lombok | 1.18.46 | `@Getter`、`@Builder` 等 |
 

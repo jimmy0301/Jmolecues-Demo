@@ -1,5 +1,5 @@
 ---
-description: ArchUnit 和 Spring Modulith 測試規則
+description: 單元測試、ArchUnit 和 Spring Modulith 測試規則
 paths:
   - src/test/**/*.java
   - src/main/java/**/*.java
@@ -7,7 +7,109 @@ paths:
 
 # 測試規則
 
-每次新增 class 後都要跑架構測試。
+每次新增 class 後都要跑架構測試；新增 domain 或 application service 時也要補對應單元測試。
+
+## Unit Test — 各層單元測試
+
+框架：JUnit 5 + AssertJ + Mockito（`spring-boot-starter-test` 已內含）。
+
+### Domain layer（不 mock，直接 new）
+
+```java
+// ordering/domain/OrderTest.java
+class OrderTest {
+
+    @Test
+    void place_whenPending_transitionsToPlacedAndReturnsEvent() {
+        var order = new Order(UUID.randomUUID());
+
+        var event = order.place();
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
+        assertThat(event).isInstanceOf(OrderPlaced.class);
+    }
+
+    @Test
+    void place_whenAlreadyPlaced_throws() {
+        var order = new Order(UUID.randomUUID());
+        order.place();
+
+        assertThatThrownBy(order::place)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already");
+    }
+}
+```
+
+**規則：** domain 測試不需要 `@ExtendWith`，直接 `new` 物件即可。只驗證狀態與回傳值，不驗證持久化。
+
+### Domain Service layer（不 mock）
+
+```java
+// ordering/domainservice/PricingServiceTest.java
+class PricingServiceTest {
+
+    private final PricingService pricingService = new PricingService();
+
+    @Test
+    void calculateTotal_multipleItems_returnsSumOfSubtotals() {
+        var result = pricingService.calculateTotal(List.of(
+                new OrderItem(UUID.randomUUID(), Quantity.of(2), Money.of(new BigDecimal("10.00"), "USD")),
+                new OrderItem(UUID.randomUUID(), Quantity.of(3), Money.of(new BigDecimal("5.00"), "USD"))));
+
+        assertThat(result.amount()).isEqualByComparingTo("35.00");
+    }
+}
+```
+
+### Application Service layer（mock repository + event publisher）
+
+```java
+// ordering/application/OrderServiceTest.java
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
+
+    @Mock private OrderRepository orderRepository;
+    @Mock private ApplicationEventPublisher events;
+    @InjectMocks private OrderService orderService;
+
+    @Test
+    void handle_placeOrderCommand_publishesEventAndSaves() {
+        var order = new Order(UUID.randomUUID());
+        when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = orderService.handle(new PlaceOrderCommand(order.getId()));
+
+        var captor = ArgumentCaptor.forClass(OrderPlaced.class);
+        verify(events).publishEvent(captor.capture());
+        assertThat(captor.getValue().orderId()).isEqualTo(order.getId());
+        assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
+    }
+}
+```
+
+**規則：** mock 只用於 Repository 和 ApplicationEventPublisher，不 mock domain 物件。
+
+### 測試檔案位置
+
+```
+src/test/java/<base-package>/
+├── shared/
+│   └── MoneyTest.java                          # Shared Kernel VO
+├── catalog/application/
+│   └── ProductServiceTest.java                 # Application Service
+├── customer/application/
+│   └── CustomerServiceTest.java                # Application Service
+└── ordering/
+    ├── domain/
+    │   ├── OrderTest.java                      # Aggregate 狀態機
+    │   └── OrderItemTest.java                  # Entity
+    ├── domainservice/
+    │   └── PricingServiceTest.java             # Domain Service
+    └── application/
+        └── OrderServiceTest.java               # Application Service
+```
 
 ## ArchUnit — 架構測試
 
@@ -69,7 +171,8 @@ paths:
 ```bash
 mvn test -Dtest=JMoleculesArchitectureTest   # 只跑架構測試
 mvn test -Dtest=ModularityTest               # 只跑模組測試
-mvn test                                     # 全部跑
+mvn test -Dtest="OrderTest,OrderServiceTest" # 只跑指定單元測試
+mvn test                                     # 全部跑（架構 + 單元）
 ```
 
 ## Spotless（格式化）

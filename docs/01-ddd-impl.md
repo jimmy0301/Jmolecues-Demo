@@ -71,6 +71,8 @@ ordering/domain/ProductReference.java  ordering 對商品的跨 Context 參照�
 `ProductId` 放在 `catalog/domain/`，只有 `catalog` 自己使用；`ordering` 改用 `ProductReference` 間接參照，不 import `ProductId`。  
 `Quantity` 只在 `ordering` 內部用，留在 `ordering.domain` 即可。
 
+**對應測試：** [`MoneyTest`](../src/test/java/com/example/demo/shared/MoneyTest.java) — 驗證 `add()` 同/異幣別與 `multiply()` 行為。
+
 ### Step 2：Entity — 有 ID、隸屬 Aggregate
 
 ```
@@ -82,6 +84,8 @@ ordering/domain/OrderItemId.java
 `OrderItem` 有自己的 `OrderItemId`，但它不是獨立的 MongoDB document（沒有 `@Id`）。  
 外部無法直接查詢 `OrderItem`，必須透過 `Order` 存取——這就是「Aggregate 是一致性邊界」的意義。
 
+**對應測試：** [`OrderItemTest`](../src/test/java/com/example/demo/ordering/domain/OrderItemTest.java) — 驗證 `subtotal()` 正確計算。
+
 ### Step 3：Aggregate Root — 一群物件的守門員
 
 ```
@@ -92,6 +96,8 @@ ordering/domain/OrderStatus.java
 **關鍵問題**：`Order.place()` 為什麼回傳 `OrderPlaced`，而不是直接存資料庫？  
 `Order` 只負責封裝業務規則和狀態轉換，不應該知道資料庫或事件系統。  
 它把「我發生了什麼事」包成事件回傳，由 `OrderService` 決定怎麼處理。
+
+**對應測試：** [`OrderTest`](../src/test/java/com/example/demo/ordering/domain/OrderTest.java) — 驗證 `addItem` / `place` / `cancel` 狀態機與 guard 條件（9 個案例）。
 
 ```java
 // 不加 annotation — producer 方法只負責更新狀態並回傳 event
@@ -136,6 +142,8 @@ public Order handle(PlaceOrderCommand command) {
     return orderRepository.save(order);           // 3. 持久化
 }
 ```
+
+**對應測試：** [`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java) — mock Repository + EventPublisher，驗證三個 command handler 與 not-found 例外。
 
 ---
 

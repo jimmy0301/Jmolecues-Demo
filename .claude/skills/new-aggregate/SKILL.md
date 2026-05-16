@@ -73,6 +73,12 @@ src/main/java/<base-package>/<context>/
 
 7. **更新 `<context>/CLAUDE.md`** 加入新 class 說明
 
+8. **建立 `<AggregateName>Test`** — domain 單元測試（不 mock，直接 new）
+
+   測試位置：`src/test/java/<base-package>/<context>/domain/<AggregateName>Test.java`
+
+   應涵蓋：狀態機轉換（guard 條件拋出 IllegalStateException）、業務方法回傳的 DomainEvent 正確性、ValueObject 欄位驗證。
+
 完成後執行：
 ```bash
 mvn spotless:apply && mvn test -Dtest=JMoleculesArchitectureTest

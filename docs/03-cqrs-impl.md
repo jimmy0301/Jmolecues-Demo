@@ -116,6 +116,38 @@ public class OrderQueryModel {
 
 ---
 
+## 單元測試
+
+Application Service 用 Mockito mock Repository 與 EventPublisher，驗證 command handler 流程：
+
+```java
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
+
+    @Mock private OrderRepository orderRepository;
+    @Mock private ApplicationEventPublisher events;
+    @InjectMocks private OrderService orderService;
+
+    @Test
+    void handle_placeOrderCommand_publishesEventAndSaves() {
+        var order = new Order(UUID.randomUUID());
+        when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = orderService.handle(new PlaceOrderCommand(order.getId()));
+
+        var captor = ArgumentCaptor.forClass(OrderPlaced.class);
+        verify(events).publishEvent(captor.capture());             // event 確實被發布
+        assertThat(captor.getValue().orderId()).isEqualTo(order.getId());
+        assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
+    }
+}
+```
+
+測試檔案：[`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java)、[`ProductServiceTest`](../src/test/java/com/example/demo/catalog/application/ProductServiceTest.java)、[`CustomerServiceTest`](../src/test/java/com/example/demo/customer/application/CustomerServiceTest.java)
+
+---
+
 ## Violation Demo
 
 以下 class 刻意違規，ArchUnit 會自動偵測：

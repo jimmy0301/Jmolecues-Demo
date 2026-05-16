@@ -20,6 +20,7 @@
 | 模組管理 | Spring Modulith Starter Core | 1.3.5 |
 | 模組事件 | Spring Modulith Events API | 1.3.5 |
 | 架構測試 | jMolecules ArchUnit + Spring Modulith Test | BOM / 1.3.5 |
+| 單元測試 | JUnit Jupiter + AssertJ + Mockito | 5.12.2 / 3.27.7 / 5.17.0 |
 | 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 |
 | 樣板程式碼 | Lombok | 1.18.46 |
 

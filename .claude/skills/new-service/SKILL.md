@@ -175,6 +175,11 @@ public class <ServiceName> {
 1. 若 ring sub-package 不存在，建立 `package-info.java`
 2. 建立 Service class（依上方模板）
 3. 更新 `<context>/CLAUDE.md`，將新 Service 加入 Classes 表格
+4. 建立對應單元測試：
+   - **Domain Service** → 直接 `new PricingService()`，不 mock，測試計算邏輯與邊界條件
+   - **Application Service** → `@ExtendWith(MockitoExtension.class)` + `@Mock Repository` + `@Mock ApplicationEventPublisher`，驗證 command handler 流程與 event 發布
+
+   測試位置：`src/test/java/<base-package>/<context>/<ring>/<ServiceName>Test.java`
 
 完成後執行：
 ```bash
