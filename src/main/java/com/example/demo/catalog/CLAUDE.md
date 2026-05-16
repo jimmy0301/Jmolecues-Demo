@@ -9,10 +9,16 @@ catalog/
   package-info.java          @BoundedContext
   MutablePrice.java          ⚠️ Violation Demo #3
   domain/                    @DomainModelRing
-    Money.java
     Product.java
     ProductId.java
     ProductRepository.java
+  application/               @ApplicationServiceRing
+    ProductService.java
+    ProductQueryModel.java
+    command/
+      CreateProductCommand.java
+  infrastructure/web/        @InfrastructureRing
+    ProductController.java
 ```
 
 ## Classes
@@ -21,8 +27,11 @@ catalog/
 |---|---|---|---|
 | `Product` | domain | AggregateRoot | 商品，含名稱、`Money` 定價 |
 | `ProductId` | domain | ID / ValueObject | `@ValueObject record` implements `Identifier` |
-| `Money` | domain | ValueObject | 金額，`BigDecimal amount` + `String currency` |
 | `ProductRepository` | domain | Repository | `MongoRepository<Product, ProductId>` |
+| `ProductService` | application | ApplicationService | `@CommandHandler` 處理 `CreateProductCommand` |
+| `ProductQueryModel` | application | QueryModel | `@QueryModel` 只讀，不觸發狀態改變 |
+| `CreateProductCommand` | application/command | Command | `@Command` 封裝建立商品意圖 |
+| `ProductController` | infrastructure | Controller | REST 端點，委派給 `ProductService` / `ProductQueryModel` |
 | `MutablePrice` | — | ⚠️ Violation Demo | 違規 #3：`@ValueObject` 有可變狀態（`@Setter`） |
 
 ## 對外暴露
@@ -30,5 +39,6 @@ catalog/
 其他 Context 只能使用 `ProductId`，import 路徑：
 ```java
 import com.example.demo.catalog.domain.ProductId;
-import com.example.demo.catalog.domain.Money;  // 若需使用金額 VO
 ```
+
+`Money` 已移至 `shared/`，從 `com.example.demo.shared.Money` import。
