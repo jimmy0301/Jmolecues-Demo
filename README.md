@@ -42,7 +42,7 @@ mvn test -Dtest=ModularityTest
 
 ---
 
-## 章節
+## 學習路徑
 
 1. [Domain-Driven Design 核心概念](docs/01-ddd.md)  
    — Building blocks 定義、Bounded Context、Shared Kernel、跨 Context 溝通  
