@@ -21,6 +21,23 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ProductResponse"
+    post:
+      tags: [Products]
+      operationId: createProduct
+      summary: 新增商品
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "201":
+          description: 商品已建立
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
 
   /products/{id}:
     get:
@@ -46,6 +63,15 @@ paths:
 
 components:
   schemas:
+    CreateProductRequest:
+      type: object
+      required: [name, price]
+      properties:
+        name:
+          type: string
+        price:
+          $ref: "#/components/schemas/Money"
+
     ProductResponse:
       type: object
       required: [id, name, price]
