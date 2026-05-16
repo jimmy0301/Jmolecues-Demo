@@ -1,7 +1,18 @@
-# jMolecules DDD Demo
+# 團隊技術入門指南
 
-用 Java + Spring Boot 展示 **Domain-Driven Design（DDD）** 核心戰術模式的電商範例專案。  
-每個 DDD building block 都以 [jMolecules](https://github.com/xmolecules/jmolecules) annotation 明確標記，並配有 ArchUnit 架構測試自動驗證。
+這份文件是給**新加入團隊的工程師**看的。  
+目的是讓你在最短時間內理解我們採用的軟體設計思想，以及這些思想如何落地在真實的程式碼裡。
+
+我們用一個簡單的電商範例（`catalog` / `customer` / `ordering` 三個 Bounded Context）貫穿所有概念。  
+範例以 Java + Spring Boot 實作，並以 [jMolecules](https://github.com/xmolecules/jmolecules) annotation 在程式碼中明確標記每個 DDD 角色，讓你讀 code 時不需要猜測。
+
+**讀完這份文件，你會知道：**
+
+- 我們為什麼用 DDD，以及 AggregateRoot / ValueObject / DomainEvent 這些詞在程式碼裡對應什麼
+- 我們如何用 Onion Architecture 組織程式碼的分層結構
+- 我們如何用 CQRS 分離寫入與讀取
+- 我們選了哪些工具，以及為什麼這樣選
+- 如何用內建的 Claude Code Skills 快速新增符合規範的程式碼
 
 ---
 
