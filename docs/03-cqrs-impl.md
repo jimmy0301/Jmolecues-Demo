@@ -20,6 +20,20 @@
 ## 本專案結構
 
 ```
+catalog/
+  application/
+    ProductService.java        ← @CommandHandler methods
+    ProductQueryModel.java     ← @QueryModel
+    command/
+      CreateProductCommand.java ← @Command
+
+customer/
+  application/
+    CustomerService.java       ← @CommandHandler methods
+    CustomerQueryModel.java    ← @QueryModel
+    command/
+      CreateCustomerCommand.java ← @Command
+
 ordering/
   application/
     OrderService.java          ← @CommandHandler methods

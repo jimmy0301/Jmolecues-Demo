@@ -39,9 +39,9 @@ graph TD
 
 | 層 | Annotation | 本專案 class |
 |---|---|---|
-| DomainModel | `@DomainModelRing` | `Order`、`OrderItem`、`OrderPlaced`、`OrderRepository` |
+| DomainModel | `@DomainModelRing` | `Order`、`OrderItem`、`OrderPlaced`、`OrderRepository`<br>`Product`、`ProductRepository`<br>`Customer`、`CustomerRepository` |
 | DomainService | `@DomainServiceRing` | `PricingService` |
-| ApplicationService | `@ApplicationServiceRing` | `OrderService`、`OrderQueryModel`、`OrderEventListener`、`*Command` |
+| ApplicationService | `@ApplicationServiceRing` | `OrderService`、`OrderQueryModel`、`OrderEventListener`、`*Command`<br>`ProductService`、`ProductQueryModel`、`CreateProductCommand`<br>`CustomerService`、`CustomerQueryModel`、`CreateCustomerCommand` |
 | Infrastructure | `@InfrastructureRing` | `OrderController`、`ProductController`、`CustomerController` |
 
 ---
