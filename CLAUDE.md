@@ -29,7 +29,8 @@ com.example.demo
 ├── shared/                  Shared Kernel → Money
 ├── catalog/
 │   ├── domain/              @DomainModelRing   → Product, ProductId, ProductRepository
-│   ├── application/         @ApplicationServiceRing → ProductQueryModel
+│   ├── application/         @ApplicationServiceRing → ProductService, ProductQueryModel
+│   │                                                   command/ → CreateProductCommand
 │   ├── infrastructure/web/  @InfrastructureRing → ProductController
 │   └── MutablePrice         ⚠️ violation demo
 ├── customer/
