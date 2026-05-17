@@ -7,7 +7,7 @@ paths:
 
 # 測試規則
 
-每次新增 class 後都要跑架構測試；新增 domain 或 application service 時也要補對應單元測試。
+每次新增 class 後都要跑架構測試；新增 domain 或 application service 時補對應單元測試；新增 Controller 時補對應 API 測試。
 
 ## Unit Test — 各層單元測試
 
@@ -91,24 +91,75 @@ class OrderServiceTest {
 
 **規則：** mock 只用於 Repository 和 ApplicationEventPublisher，不 mock domain 物件。
 
+### Infrastructure layer — Controller API 測試（@WebMvcTest）
+
+```java
+// catalog/infrastructure/web/ProductControllerTest.java
+@WebMvcTest(ProductController.class)
+class ProductControllerTest {
+
+    @Autowired MockMvc mockMvc;
+    @MockBean ProductService productService;
+    @MockBean ProductQueryModel productQueryModel;
+
+    @Test
+    void createProduct_returns201WithBody() throws Exception {
+        var product = new Product("Widget", Money.of(new BigDecimal("10.00"), "USD"));
+        when(productService.handle(any())).thenReturn(product);
+
+        mockMvc.perform(
+                        post("/products")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {"name":"Widget","price":{"amount":10.00,"currency":"USD"}}
+                                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Widget"));
+    }
+
+    @Test
+    void getProductById_whenNotFound_returns404() throws Exception {
+        when(productQueryModel.findById(any())).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/products/{id}", UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+}
+```
+
+**規則：**
+- 用 `@WebMvcTest(XxxController.class)` 載入單一 Controller 的 web slice，不啟動完整 Spring context，不需要 MongoDB
+- 測試放在**與 Controller 相同的 package**（`infrastructure.web`），才能存取 package-private 的 Controller class
+- Application Service 和 QueryModel 一律用 `@MockBean`，不 mock domain 物件
+- 每個 Controller 至少涵蓋：成功路徑（2xx）、not found（404）、請求 body 欄位驗證
+- WireMock 適用於 mock 外部 HTTP 服務；本專案目前無外部 HTTP 依賴，不需引入
+
 ### 測試檔案位置
 
 ```
 src/test/java/<base-package>/
 ├── shared/
-│   └── MoneyTest.java                          # Shared Kernel VO
-├── catalog/application/
-│   └── ProductServiceTest.java                 # Application Service
-├── customer/application/
-│   └── CustomerServiceTest.java                # Application Service
+│   └── MoneyTest.java                                  # Shared Kernel VO
+├── catalog/
+│   ├── application/
+│   │   └── ProductServiceTest.java                     # Application Service
+│   └── infrastructure/web/
+│       └── ProductControllerTest.java                  # Controller API 測試
+├── customer/
+│   ├── application/
+│   │   └── CustomerServiceTest.java                    # Application Service
+│   └── infrastructure/web/
+│       └── CustomerControllerTest.java                 # Controller API 測試
 └── ordering/
     ├── domain/
-    │   ├── OrderTest.java                      # Aggregate 狀態機
-    │   └── OrderItemTest.java                  # Entity
+    │   ├── OrderTest.java                              # Aggregate 狀態機
+    │   └── OrderItemTest.java                          # Entity
     ├── domainservice/
-    │   └── PricingServiceTest.java             # Domain Service
-    └── application/
-        └── OrderServiceTest.java               # Application Service
+    │   └── PricingServiceTest.java                     # Domain Service
+    ├── application/
+    │   └── OrderServiceTest.java                       # Application Service
+    └── infrastructure/web/
+        └── OrderControllerTest.java                    # Controller API 測試
 ```
 
 ## ArchUnit — 架構測試
@@ -169,10 +220,11 @@ src/test/java/<base-package>/
 ## 執行指令
 
 ```bash
-mvn test -Dtest=JMoleculesArchitectureTest   # 只跑架構測試
-mvn test -Dtest=ModularityTest               # 只跑模組測試
-mvn test -Dtest="OrderTest,OrderServiceTest" # 只跑指定單元測試
-mvn test                                     # 全部跑（架構 + 單元）
+mvn test -Dtest=JMoleculesArchitectureTest                        # 只跑架構測試
+mvn test -Dtest=ModularityTest                                    # 只跑模組測試
+mvn test -Dtest="OrderTest,OrderServiceTest"                      # 只跑指定單元測試
+mvn test -Dtest="ProductControllerTest,CustomerControllerTest,OrderControllerTest"  # 只跑 API 測試
+mvn test                                                          # 全部跑（架構 + 單元 + API）
 ```
 
 ## Spotless（格式化）

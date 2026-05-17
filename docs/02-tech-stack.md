@@ -23,6 +23,7 @@
 | 單元測試 | JUnit Jupiter | 5.12.2 | 單元測試框架（via spring-boot-starter-test） |
 | 單元測試 | AssertJ | 3.27.7 | Fluent assertion（via spring-boot-starter-test） |
 | 單元測試 | Mockito | 5.17.0 | Mock / Stub（via spring-boot-starter-test） |
+| API 測試 | Spring MVC Test（MockMvc） | — | `@WebMvcTest` Controller slice 測試，不需啟動 MongoDB |
 | 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 | 強制統一格式 |
 | 樣板程式碼 | Lombok | 1.18.46 | `@Getter`、`@Builder` 等 |
 

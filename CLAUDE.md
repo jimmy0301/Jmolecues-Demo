@@ -60,6 +60,7 @@ com.example.demo
 - @Command 放在 `application.command` 套件；@CommandHandler 只在 `application` 層
 - @QueryModel 不可呼叫 @CommandHandler（read side 不觸發 state change）
 - 每次新增 class 後執行 `mvn spotless:apply` 再跑 ArchUnit test
+- Controller 新增時補對應 `@WebMvcTest` API 測試，放在相同 package（`infrastructure.web`）
 
 ## 完成操作後的自動行為
 
@@ -81,3 +82,6 @@ mvn test -Dtest=JMoleculesArchitectureTest  # 只跑 ArchUnit
 @.claude/rules/bounded-context.md
 @.claude/rules/cqrs-annotations.md
 @.claude/rules/testing.md
+
+# Knowledge Base
+跨專案筆記、架構決策、session 記錄：/Users/keyulun/Documents/claude knowledge base/my-knowledge-base

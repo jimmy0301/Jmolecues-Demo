@@ -146,6 +146,49 @@ class OrderServiceTest {
 
 測試檔案：[`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java)、[`ProductServiceTest`](../src/test/java/com/example/demo/catalog/application/ProductServiceTest.java)、[`CustomerServiceTest`](../src/test/java/com/example/demo/customer/application/CustomerServiceTest.java)
 
+## Controller API 測試
+
+Controller 用 `@WebMvcTest` 做 HTTP slice 測試，只載入 web 層，不啟動 MongoDB。Application Service 與 QueryModel 以 `@MockBean` 替換：
+
+```java
+@WebMvcTest(OrderController.class)
+class OrderControllerTest {
+
+    @Autowired MockMvc mockMvc;
+    @MockBean OrderService orderService;
+    @MockBean OrderQueryModel orderQueryModel;
+
+    @Test
+    void createOrder_returns201WithPendingStatus() throws Exception {
+        var customerId = UUID.randomUUID();
+        var order = new Order(customerId);
+        when(orderService.handle(any(CreateOrderCommand.class))).thenReturn(order);
+
+        mockMvc.perform(
+                        post("/orders")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"customerId\":\"" + customerId + "\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    void placeOrder_returns200WithPlacedStatus() throws Exception {
+        var order = new Order(UUID.randomUUID());
+        order.place();
+        when(orderService.handle(any(PlaceOrderCommand.class))).thenReturn(order);
+
+        mockMvc.perform(post("/orders/{id}/place", order.getId().id()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PLACED"));
+    }
+}
+```
+
+測試放在與 Controller **相同的 package**（`infrastructure.web`）以存取 package-private class。
+
+測試檔案：[`OrderControllerTest`](../src/test/java/com/example/demo/ordering/infrastructure/web/OrderControllerTest.java)、[`ProductControllerTest`](../src/test/java/com/example/demo/catalog/infrastructure/web/ProductControllerTest.java)、[`CustomerControllerTest`](../src/test/java/com/example/demo/customer/infrastructure/web/CustomerControllerTest.java)
+
 ---
 
 ## Violation Demo
