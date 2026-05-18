@@ -83,5 +83,4 @@ mvn test -Dtest=JMoleculesArchitectureTest  # 只跑 ArchUnit
 @.claude/rules/cqrs-annotations.md
 @.claude/rules/testing.md
 
-# Knowledge Base
-跨專案筆記、架構決策、session 記錄：/Users/keyulun/Documents/claude knowledge base/my-knowledge-base
+@/Users/keyulun/Documents/claude knowledge base/software-dev-kb/CLAUDE.md

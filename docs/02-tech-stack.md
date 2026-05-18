@@ -33,7 +33,8 @@
 
 ### jMolecules — 讓程式碼說出 DDD 意圖
 
-**問題**：DDD 概念（AggregateRoot、ValueObject 等）通常只存在文件和開發者腦中，程式碼本身無法表達。
+**問題**：DDD
+概念（AggregateRoot、ValueObject 等）通常只存在文件和開發者腦中，程式碼本身無法表達。
 
 **解法**：jMolecules 提供一組 annotation，讓你直接在 class 上標記它的 DDD 角色：
 
