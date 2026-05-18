@@ -24,6 +24,7 @@
 | 單元測試 | AssertJ | 3.27.7 | Fluent assertion（via spring-boot-starter-test） |
 | 單元測試 | Mockito | 5.17.0 | Mock / Stub（via spring-boot-starter-test） |
 | API 測試 | Spring MVC Test（MockMvc） | — | `@WebMvcTest` Controller slice 測試，不需啟動 MongoDB |
+| 整合測試 | Testcontainers（MongoDB） | 1.21.4 | 在真實 MongoDB 容器中執行 Repository 整合測試 |
 | 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 | 強制統一格式 |
 | 樣板程式碼 | Lombok | 1.18.46 | `@Getter`、`@Builder` 等 |
 
@@ -131,6 +132,56 @@ void documentModules() {
 
 **為何用 MongoDB 而非關聯式資料庫？**  
 MongoDB 的 document 模型天然對應 Aggregate 邊界——整個 `Order`（含內嵌的 `OrderItem` list）儲存為一個 document，不需要 JOIN，符合「Aggregate 是一致性邊界」的概念。
+
+---
+
+### Testcontainers — Repository 整合測試
+
+**問題**：用 mock 或 embedded MongoDB 測試 Repository 時，查詢行為可能與真實 MongoDB 不同，容易在 production 才暴露問題。
+
+**解法**：Testcontainers 在每次測試時啟動一個真實的 MongoDB Docker 容器，Repository 測試直接操作真實資料庫：
+
+```java
+// 標準組合：三個 annotation 缺一不可
+@DataMongoTest                          // 只載入 MongoDB 相關 Bean，不啟動整個 Spring context
+@Import(MongoTestContainersConfig.class) // 注入 Testcontainers 設定
+@Testcontainers                         // 啟動 / 停止容器的生命週期管理
+class OrderRepositoryTest {
+
+    @Container
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7");
+
+    @Autowired OrderRepository orderRepository;
+
+    @Test
+    void save_andFindById_returnsPersistedOrder() {
+        var order = new Order(UUID.randomUUID());
+        orderRepository.save(order);
+
+        var found = orderRepository.findById(order.getId());
+
+        assertThat(found).isPresent();
+    }
+}
+```
+
+共用的容器設定放在 `MongoTestContainersConfig`：
+
+```java
+@TestConfiguration
+class MongoTestContainersConfig {
+
+    @Bean
+    @ServiceConnection                   // 自動將容器連線資訊注入 Spring Data
+    MongoDBContainer mongoDBContainer() {
+        return new MongoDBContainer("mongo:7");
+    }
+}
+```
+
+**版本來源**：Testcontainers `1.21.4` 由 Spring Boot BOM（`3.5.14`）管理，pom.xml 不需要明確指定版本。
+
+**前置條件**：執行整合測試時本機需有 Docker 環境。若 Docker 未啟動，`@DataMongoTest` 測試會失敗（`@WebMvcTest` 測試不受影響）。
 
 ---
 
