@@ -2,6 +2,7 @@ package com.example.demo.ordering.domain;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -9,11 +10,13 @@ import lombok.Getter;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.AbstractAggregateRoot;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @AggregateRoot
 @Document(collection = "orders")
-public class Order implements org.jmolecules.ddd.types.AggregateRoot<Order, OrderId> {
+public class Order extends AbstractAggregateRoot<Order>
+        implements org.jmolecules.ddd.types.AggregateRoot<Order, OrderId> {
 
     @Getter @Id @Identity private OrderId id;
 
@@ -45,19 +48,23 @@ public class Order implements org.jmolecules.ddd.types.AggregateRoot<Order, Orde
         items.add(item);
     }
 
-    public OrderPlaced place() {
+    public void place() {
         if (status != OrderStatus.PENDING) {
             throw new IllegalStateException("Order is already " + status);
         }
         this.status = OrderStatus.PLACED;
-        return new OrderPlaced(this.id, Instant.now());
+        registerEvent(new OrderPlaced(this.id, Instant.now()));
     }
 
-    public OrderCancelled cancel() {
+    public void cancel() {
         if (status == OrderStatus.CANCELLED) {
             throw new IllegalStateException("Order is already cancelled");
         }
         this.status = OrderStatus.CANCELLED;
-        return new OrderCancelled(this.id, Instant.now());
+        registerEvent(new OrderCancelled(this.id, Instant.now()));
+    }
+
+    public Collection<Object> getRegisteredEvents() {
+        return domainEvents();
     }
 }

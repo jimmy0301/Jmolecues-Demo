@@ -8,18 +8,15 @@ import com.example.demo.ordering.domain.OrderId;
 import com.example.demo.ordering.domain.OrderRepository;
 import java.util.Optional;
 import org.jmolecules.architecture.cqrs.CommandHandler;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final ApplicationEventPublisher events;
 
-    public OrderService(OrderRepository orderRepository, ApplicationEventPublisher events) {
+    public OrderService(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
-        this.events = events;
     }
 
     @CommandHandler
@@ -30,14 +27,14 @@ public class OrderService {
     @CommandHandler
     public Order handle(PlaceOrderCommand command) {
         Order order = findOrder(command.orderId());
-        events.publishEvent(order.place());
+        order.place();
         return orderRepository.save(order);
     }
 
     @CommandHandler
     public Order handle(CancelOrderCommand command) {
         Order order = findOrder(command.orderId());
-        events.publishEvent(order.cancel());
+        order.cancel();
         return orderRepository.save(order);
     }
 

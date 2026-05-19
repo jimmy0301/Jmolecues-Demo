@@ -54,13 +54,14 @@ class OrderTest {
     }
 
     @Test
-    void place_whenPending_transitionsToPlacedAndReturnsEvent() {
+    void place_whenPending_transitionsToPlacedAndRegistersEvent() {
         var order = new Order(CUSTOMER_ID);
 
-        var event = order.place();
+        order.place();
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
-        assertThat(event).isInstanceOf(OrderPlaced.class);
+        assertThat(order.getRegisteredEvents()).hasSize(1);
+        var event = (OrderPlaced) order.getRegisteredEvents().iterator().next();
         assertThat(event.orderId()).isEqualTo(order.getId());
     }
 
@@ -75,13 +76,14 @@ class OrderTest {
     }
 
     @Test
-    void cancel_whenPending_transitionsToCancelledAndReturnsEvent() {
+    void cancel_whenPending_transitionsToCancelledAndRegistersEvent() {
         var order = new Order(CUSTOMER_ID);
 
-        var event = order.cancel();
+        order.cancel();
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
-        assertThat(event).isInstanceOf(OrderCancelled.class);
+        assertThat(order.getRegisteredEvents()).hasSize(1);
+        var event = (OrderCancelled) order.getRegisteredEvents().iterator().next();
         assertThat(event.orderId()).isEqualTo(order.getId());
     }
 

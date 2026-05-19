@@ -93,20 +93,20 @@ ordering/domain/Order.java
 ordering/domain/OrderStatus.java
 ```
 
-**關鍵問題**：`Order.place()` 為什麼回傳 `OrderPlaced`，而不是直接存資料庫？  
-`Order` 只負責封裝業務規則和狀態轉換，不應該知道資料庫或事件系統。  
-它把「我發生了什麼事」包成事件回傳，由 `OrderService` 決定怎麼處理。
+**關鍵問題**：`Order.place()` 為什麼用 `registerEvent()` 而不是直接注入 `ApplicationEventPublisher`？  
+`Order` 繼承 `AbstractAggregateRoot<Order>`（Spring Data Commons），在狀態變更時呼叫 `registerEvent()` 把 event 存入 aggregate 內部佇列。  
+Spring Data 在 `repository.save()` 時自動讀取這個佇列並透過 `ApplicationEventPublisher` 發布——`Order` 不需要知道事件系統，`OrderService` 也不需要手動 `publishEvent()`。
 
 **對應測試：** [`OrderTest`](../src/test/java/com/example/demo/ordering/domain/OrderTest.java) — 驗證 `addItem` / `place` / `cancel` 狀態機與 guard 條件（9 個案例）。
 
 ```java
-// 不加 annotation — producer 方法只負責更新狀態並回傳 event
-public OrderPlaced place() {
+// Order 繼承 AbstractAggregateRoot<Order>，用 registerEvent() 在 domain 內部登記事件
+public void place() {
     if (status != OrderStatus.PENDING) {
         throw new IllegalStateException("Order is already " + status);
     }
     this.status = OrderStatus.PLACED;
-    return new OrderPlaced(this.id, Instant.now()); // 回傳事件，不主動發布
+    registerEvent(new OrderPlaced(this.id, Instant.now())); // domain 登記，save() 時自動發布
 }
 ```
 
@@ -131,19 +131,19 @@ ordering/application/OrderService.java
 ```
 
 **關鍵問題**：`OrderService` 跟 `Order` 的職責怎麼分？  
-`OrderService` 只做三件事：取 Aggregate → 呼叫方法 → 儲存並發布事件。  
-**業務規則在 `Order.place()` 裡**，不在 Service 裡。
+`OrderService` 只做三件事：取 Aggregate → 呼叫方法 → 儲存。  
+**業務規則在 `Order.place()` 裡**，不在 Service 裡。事件由 Spring Data 在 `save()` 時自動發布，Service 無需注入 `ApplicationEventPublisher`。
 
 ```java
 @CommandHandler
 public Order handle(PlaceOrderCommand command) {
     Order order = findOrder(command.orderId());   // 1. 取 Aggregate
-    events.publishEvent(order.place());           // 2. 執行業務方法，收到事件後發布
-    return orderRepository.save(order);           // 3. 持久化
+    order.place();                                // 2. 執行業務方法（內部登記 event）
+    return orderRepository.save(order);           // 3. 持久化，Spring Data 自動發布已登記的 event
 }
 ```
 
-**對應測試：** [`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java) — mock Repository + EventPublisher，驗證三個 command handler 與 not-found 例外。
+**對應測試：** [`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java) — mock Repository，驗證三個 command handler 與 not-found 例外；event 驗證改為檢查 save 時 aggregate 的 `domainEvents()`。
 
 ---
 

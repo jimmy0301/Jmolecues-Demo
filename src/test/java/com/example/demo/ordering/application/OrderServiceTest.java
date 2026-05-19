@@ -23,13 +23,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
 
     @Mock private OrderRepository orderRepository;
-    @Mock private ApplicationEventPublisher events;
 
     @InjectMocks private OrderService orderService;
 
@@ -47,7 +45,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void handle_placeOrderCommand_publishesEventAndSaves() {
+    void handle_placeOrderCommand_registersEventAndSaves() {
         var order = new Order(UUID.randomUUID());
         var command = new PlaceOrderCommand(order.getId());
         when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
@@ -55,15 +53,17 @@ class OrderServiceTest {
 
         var result = orderService.handle(command);
 
-        var eventCaptor = ArgumentCaptor.forClass(OrderPlaced.class);
-        verify(events).publishEvent(eventCaptor.capture());
-        assertThat(eventCaptor.getValue().orderId()).isEqualTo(order.getId());
-        verify(orderRepository).save(order);
+        var orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        var savedOrder = orderCaptor.getValue();
+        assertThat(savedOrder.getRegisteredEvents()).hasSize(1);
+        var event = (OrderPlaced) savedOrder.getRegisteredEvents().iterator().next();
+        assertThat(event.orderId()).isEqualTo(order.getId());
         assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
     }
 
     @Test
-    void handle_cancelOrderCommand_publishesEventAndSaves() {
+    void handle_cancelOrderCommand_registersEventAndSaves() {
         var order = new Order(UUID.randomUUID());
         var command = new CancelOrderCommand(order.getId());
         when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
@@ -71,10 +71,12 @@ class OrderServiceTest {
 
         var result = orderService.handle(command);
 
-        var eventCaptor = ArgumentCaptor.forClass(OrderCancelled.class);
-        verify(events).publishEvent(eventCaptor.capture());
-        assertThat(eventCaptor.getValue().orderId()).isEqualTo(order.getId());
-        verify(orderRepository).save(order);
+        var orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        var savedOrder = orderCaptor.getValue();
+        assertThat(savedOrder.getRegisteredEvents()).hasSize(1);
+        var event = (OrderCancelled) savedOrder.getRegisteredEvents().iterator().next();
+        assertThat(event.orderId()).isEqualTo(order.getId());
         assertThat(result.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
