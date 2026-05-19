@@ -70,6 +70,39 @@ com.example.demo
 - `.claude/rules/` — 對應的 rule 檔範例與規則描述
 - `.claude/skills/` — 對應的 skill 模板
 
+## Conventional Commits
+
+本專案使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式：
+
+```
+<type>[optional scope]: <description>
+```
+
+| type | 用途 |
+|---|---|
+| `feat` | 新功能 |
+| `fix` | 修 bug |
+| `docs` | 文件 |
+| `refactor` | 重構（不影響行為） |
+| `test` | 新增或修改測試 |
+| `chore` | 維護、建置、工具設定 |
+| `style` | 格式調整 |
+| `build` | 建置系統或依賴異動 |
+| `ci` | CI 設定 |
+| `perf` | 效能優化 |
+
+scope 建議用 Bounded Context 名稱：`catalog`、`customer`、`ordering`、`shared`
+
+```
+feat(ordering): add PlaceOrderCommand handler
+fix(catalog): correct price calculation for discounts
+docs: update README with setup guide
+test(customer): add WebMvcTest for CustomerController
+```
+
+**commit-msg hook** 存放於 `.githooks/commit-msg`，每次 `mvn` 執行時自動安裝到 `.git/hooks/`。
+手動安裝（clone 後首次）：`mvn validate -q`
+
 ## 常用指令
 ```bash
 mvn spotless:apply          # 格式化

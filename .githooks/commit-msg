@@ -1,0 +1,30 @@
+#!/bin/sh
+# Validates Conventional Commits format: https://www.conventionalcommits.org
+commit_msg_file="$1"
+commit_msg=$(cat "$commit_msg_file")
+
+# Skip merge / revert commits
+if echo "$commit_msg" | grep -qE "^(Merge|Revert)"; then
+    exit 0
+fi
+
+pattern="^(feat|fix|docs|style|refactor|test|chore|build|ci|perf|revert)(\([a-zA-Z0-9/_-]+\))?(!)?: .+"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+    echo "ERROR: Commit message does not follow Conventional Commits format."
+    echo ""
+    echo "  Expected: <type>[optional scope]: <description>"
+    echo "  Types:    feat, fix, docs, style, refactor, test, chore, build, ci, perf, revert"
+    echo "  Scopes:   catalog, customer, ordering, shared (optional)"
+    echo ""
+    echo "  Examples:"
+    echo "    feat(ordering): add PlaceOrderCommand handler"
+    echo "    fix(catalog): correct price calculation for discounts"
+    echo "    docs: update README with Conventional Commits guide"
+    echo "    test(customer): add WebMvcTest for CustomerController"
+    echo ""
+    echo "  Your message: $commit_msg"
+    exit 1
+fi
+
+exit 0

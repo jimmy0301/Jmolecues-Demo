@@ -187,6 +187,29 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
+            <!-- 在任何 mvn 執行時自動將 .githooks/ 安裝為 git hooks（validate phase，早於 Spotless） -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>install-git-hooks</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>sh</executable>
+                            <arguments>
+                                <argument>-c</argument>
+                                <argument>HOOKS_DIR=$(git rev-parse --git-path hooks 2&gt;/dev/null) &amp;&amp; [ -n "$HOOKS_DIR" ] &amp;&amp; cp .githooks/commit-msg "$HOOKS_DIR/commit-msg" &amp;&amp; chmod +x "$HOOKS_DIR/commit-msg" || true</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Spotless — 統一程式碼格式 -->
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
@@ -316,6 +339,7 @@
                     <classPathDiscovery>true</classPathDiscovery>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
 </project>
