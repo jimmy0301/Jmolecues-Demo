@@ -81,14 +81,14 @@ public class OrderService {
     @CommandHandler
     public Order handle(PlaceOrderCommand command) {
         Order order = findOrder(command.orderId());
-        events.publishEvent(order.place());   // 業務規則在 Order，不在這裡
-        return orderRepository.save(order);
+        order.place();                            // 業務規則在 Order，event 已登記在 aggregate
+        return orderRepository.save(order);       // Spring Data 在 save() 時自動發布已登記的 event
     }
 
     @CommandHandler
     public Order handle(CancelOrderCommand command) {
         Order order = findOrder(command.orderId());
-        events.publishEvent(order.cancel());
+        order.cancel();
         return orderRepository.save(order);
     }
 }
@@ -118,27 +118,29 @@ public class OrderQueryModel {
 
 ## 單元測試
 
-Application Service 用 Mockito mock Repository 與 EventPublisher，驗證 command handler 流程：
+Application Service 用 Mockito mock Repository，驗證 command handler 流程；event 驗證改為捕捉傳入 `save()` 的 aggregate，再檢查 `getRegisteredEvents()`：
 
 ```java
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
 
     @Mock private OrderRepository orderRepository;
-    @Mock private ApplicationEventPublisher events;
     @InjectMocks private OrderService orderService;
 
     @Test
-    void handle_placeOrderCommand_publishesEventAndSaves() {
+    void handle_placeOrderCommand_registersEventAndSaves() {
         var order = new Order(UUID.randomUUID());
         when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         var result = orderService.handle(new PlaceOrderCommand(order.getId()));
 
-        var captor = ArgumentCaptor.forClass(OrderPlaced.class);
-        verify(events).publishEvent(captor.capture());             // event 確實被發布
-        assertThat(captor.getValue().orderId()).isEqualTo(order.getId());
+        var orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        var savedOrder = orderCaptor.getValue();
+        assertThat(savedOrder.getRegisteredEvents()).hasSize(1);
+        var event = (OrderPlaced) savedOrder.getRegisteredEvents().iterator().next();
+        assertThat(event.orderId()).isEqualTo(order.getId());
         assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
     }
 }

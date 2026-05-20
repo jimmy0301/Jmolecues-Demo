@@ -20,13 +20,15 @@ paths:
 class OrderTest {
 
     @Test
-    void place_whenPending_transitionsToPlacedAndReturnsEvent() {
+    void place_whenPending_transitionsToPlacedAndRegistersEvent() {
         var order = new Order(UUID.randomUUID());
 
-        var event = order.place();
+        order.place();
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
-        assertThat(event).isInstanceOf(OrderPlaced.class);
+        assertThat(order.getRegisteredEvents()).hasSize(1);
+        var event = (OrderPlaced) order.getRegisteredEvents().iterator().next();
+        assertThat(event.orderId()).isEqualTo(order.getId());
     }
 
     @Test
@@ -41,7 +43,7 @@ class OrderTest {
 }
 ```
 
-**規則：** domain 測試不需要 `@ExtendWith`，直接 `new` 物件即可。只驗證狀態與回傳值，不驗證持久化。
+**規則：** domain 測試不需要 `@ExtendWith`，直接 `new` 物件即可。只驗證狀態與已登記的 event，不驗證持久化。
 
 ### Domain Service layer（不 mock）
 
@@ -62,7 +64,7 @@ class PricingServiceTest {
 }
 ```
 
-### Application Service layer（mock repository + event publisher）
+### Application Service layer（mock repository）
 
 ```java
 // ordering/application/OrderServiceTest.java
@@ -70,26 +72,28 @@ class PricingServiceTest {
 class OrderServiceTest {
 
     @Mock private OrderRepository orderRepository;
-    @Mock private ApplicationEventPublisher events;
     @InjectMocks private OrderService orderService;
 
     @Test
-    void handle_placeOrderCommand_publishesEventAndSaves() {
+    void handle_placeOrderCommand_registersEventAndSaves() {
         var order = new Order(UUID.randomUUID());
         when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
         when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         var result = orderService.handle(new PlaceOrderCommand(order.getId()));
 
-        var captor = ArgumentCaptor.forClass(OrderPlaced.class);
-        verify(events).publishEvent(captor.capture());
-        assertThat(captor.getValue().orderId()).isEqualTo(order.getId());
+        var orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        var savedOrder = orderCaptor.getValue();
+        assertThat(savedOrder.getRegisteredEvents()).hasSize(1);
+        var event = (OrderPlaced) savedOrder.getRegisteredEvents().iterator().next();
+        assertThat(event.orderId()).isEqualTo(order.getId());
         assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
     }
 }
 ```
 
-**規則：** mock 只用於 Repository 和 ApplicationEventPublisher，不 mock domain 物件。
+**規則：** mock 只用於 Repository，不 mock domain 物件也不 mock `ApplicationEventPublisher`（event 透過 `getRegisteredEvents()` 驗證）。
 
 ### Infrastructure layer — Controller API 測試（@WebMvcTest）
 

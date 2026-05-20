@@ -98,7 +98,7 @@ public class OrderService {
 
     public Order placeOrder(OrderId orderId) {
         Order order = findOrder(orderId);
-        events.publishEvent(order.place());
+        order.place(); // registerEvent() 已在 domain 登記，save() 時自動發布
         order.getItems().forEach(item ->
             mongoTemplate.save(item, "order_item_snapshots")); // 寫入快照 collection
         return orderRepository.save(order);
@@ -147,7 +147,7 @@ public interface OrderRepository extends CrudRepository<Order, OrderId> { ... }
 public record OrderPlaced(OrderId orderId, Instant occurredOn) { ... }
 ```
 - 命名用**過去式**
-- producer 方法（`place()`、`cancel()`）直接回傳 DomainEvent 即可，不需任何 jMolecules annotation
+- producer 方法（`place()`、`cancel()`）呼叫 `registerEvent()` 登記事件（`Order` 繼承 `AbstractAggregateRoot<Order>`），Spring Data 在 `save()` 時自動發布，不需任何 jMolecules annotation，Service 也不需注入 `ApplicationEventPublisher`
 
 ## DomainEventHandler（consumer）
 ```java

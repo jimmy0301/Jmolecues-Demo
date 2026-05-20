@@ -77,20 +77,19 @@ sequenceDiagram
     participant H as CommandHandler
     participant A as Order (Aggregate)
     participant R as Repository
-    participant E as Event Publisher
 
     C->>CMD: new PlaceOrderCommand(orderId)
     C->>H: handle(command)
     H->>R: findById(orderId)
     R-->>H: order
     H->>A: order.place()
-    A-->>H: OrderPlaced event
-    H->>E: publishEvent(OrderPlaced)
+    Note over A: registerEvent(OrderPlaced)
     H->>R: save(order)
+    Note over R: Spring Data 自動發布已登記的 event
     H-->>C: saved order
 ```
 
-Handler 是薄薄的協調層，真正的業務規則（「PENDING 才能 place」）在 `Order.place()` 裡。
+Handler 是薄薄的協調層，真正的業務規則（「PENDING 才能 place」）在 `Order.place()` 裡。`Order` 繼承 `AbstractAggregateRoot`，`place()` 用 `registerEvent()` 在 domain 內部登記事件；Spring Data 在 `save()` 時自動發布，`OrderService` 無需注入 `ApplicationEventPublisher`。
 
 ---
 

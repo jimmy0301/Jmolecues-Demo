@@ -59,10 +59,10 @@ public class Order {
 
 // ✅ 正確：Domain Model 只操作自己的狀態，Repository 由 Application Service 呼叫
 @AggregateRoot
-public class Order {
-    public OrderPlaced place() {
+public class Order extends AbstractAggregateRoot<Order> {
+    public void place() {
         this.status = OrderStatus.PLACED;
-        return new OrderPlaced(this.id, Instant.now());
+        registerEvent(new OrderPlaced(this.id, Instant.now())); // 登記事件，save() 時自動發布
     }
 }
 ```

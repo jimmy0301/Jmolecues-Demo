@@ -143,7 +143,7 @@ public Order handle(PlaceOrderCommand command) {
 }
 ```
 
-**對應測試：** [`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java) — mock Repository，驗證三個 command handler 與 not-found 例外；event 驗證改為檢查 save 時 aggregate 的 `domainEvents()`。
+**對應測試：** [`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java) — mock Repository，驗證三個 command handler 與 not-found 例外；event 驗證改為檢查 save 時 aggregate 的 `getRegisteredEvents()`。
 
 ---
 

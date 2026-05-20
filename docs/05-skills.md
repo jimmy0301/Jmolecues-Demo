@@ -139,16 +139,15 @@ src/main/java/com/example/demo/shipping/
 | 檔案 | 說明 |
 |---|---|
 | `domain/<EventName>.java` | `@DomainEvent record`，命名用**過去式** |
-| `domain/<AggregateRoot>.java` | 加入 producer 方法（回傳 event，不主動發布） |
-| `application/<Context>Service.java` | 加入 `ApplicationEventPublisher.publishEvent()` |
+| `domain/<AggregateRoot>.java` | 加入 producer 方法，用 `registerEvent()` 登記事件 |
 | `application/<EventName>Listener.java` | `@ApplicationModuleListener` 接收 event |
 
 **事件流程：**
 
 ```
-AggregateRoot.someAction()   →   回傳 DomainEvent
+AggregateRoot.someAction()   →   registerEvent(DomainEvent)
     ↓
-ApplicationService           →   publishEvent(event)
+ApplicationService           →   repository.save(aggregate)（Spring Data 自動發布）
     ↓
 EventListener.on(event)      →   @ApplicationModuleListener（async、交易隔離）
 ```
@@ -189,10 +188,10 @@ EventListener.on(event)      →   @ApplicationModuleListener（async、交易�
 |---|---|---|
 | Ring | `@DomainServiceRing` | `@ApplicationServiceRing` |
 | Annotation | `@Service`（jMolecules） | `@Service`（Spring） |
-| 可依賴 | Domain 物件 | Repository、EventPublisher、Domain Service |
+| 可依賴 | Domain 物件 | Repository、Domain Service |
 | 典型例子 | `PricingService`、`DiscountPolicy` | `OrderService`、`CustomerService` |
 
-**完成後：** 自動補對應單元測試（Domain Service 不 mock；Application Service mock Repository + EventPublisher）。
+**完成後：** 自動補對應單元測試（Domain Service 不 mock；Application Service mock Repository，event 驗證透過 `getRegisteredEvents()` 檢查 aggregate）。
 
 ---
 
