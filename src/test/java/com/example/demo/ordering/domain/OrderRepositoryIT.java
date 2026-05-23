@@ -38,6 +38,7 @@ class OrderRepositoryIT extends MongoIntegrationTest {
         order.addItem(
                 new OrderItem(
                         UUID.randomUUID(),
+                        "Widget",
                         Quantity.of(2),
                         Money.of(new BigDecimal("15.00"), "USD")));
         orderRepository.save(order);
@@ -46,7 +47,9 @@ class OrderRepositoryIT extends MongoIntegrationTest {
 
         assertThat(found.getItems()).hasSize(1);
         assertThat(found.getItems().get(0).getQuantity().value()).isEqualTo(2);
-        assertThat(found.getItems().get(0).getUnitPrice().amount()).isEqualByComparingTo("15.00");
+        assertThat(found.getItems().get(0).getProductNameSnapshot()).isEqualTo("Widget");
+        assertThat(found.getItems().get(0).getUnitPriceSnapshot().amount())
+                .isEqualByComparingTo("15.00");
     }
 
     @Test

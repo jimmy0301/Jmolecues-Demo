@@ -1,0 +1,3 @@
+[mcp_servers.obsidian-cli]
+args = ["mcp-obsidian-cli"]
+command = "npx"

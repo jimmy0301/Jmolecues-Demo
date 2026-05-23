@@ -17,6 +17,9 @@ catalog/
     ProductQueryModel.java
     command/
       CreateProductCommand.java
+  publicapi/                 @NamedInterface("public-api") + @ApplicationServiceRing
+    ProductQueryFacade.java
+    ProductSummary.java
   infrastructure/web/        @InfrastructureRing
     ProductController.java
 ```
@@ -31,14 +34,18 @@ catalog/
 | `ProductService` | application | ApplicationService | `@CommandHandler` 處理 `CreateProductCommand` |
 | `ProductQueryModel` | application | QueryModel | `@QueryModel` 只讀，不觸發狀態改變 |
 | `CreateProductCommand` | application/command | Command | `@Command` 封裝建立商品意圖 |
+| `ProductQueryFacade` | publicapi | Public API | 給其他 Context 查詢商品摘要的公開介面 |
+| `ProductSummary` | publicapi | Public DTO | 跨 Context 查詢回傳的穩定 DTO |
 | `ProductController` | infrastructure | Controller | REST 端點，委派給 `ProductService` / `ProductQueryModel` |
 | `MutablePrice` | — | ⚠️ Violation Demo | 違規 #3：`@ValueObject` 有可變狀態（`@Setter`） |
 
 ## 對外暴露
 
-其他 Context 只能使用 `ProductId`，import 路徑：
+其他 Context 不直接 import `catalog.domain.ProductId`、`Product` 或 `ProductRepository`。
+需要讀取商品展示資料時，使用公開介面：
 ```java
-import com.example.demo.catalog.domain.ProductId;
+import com.example.demo.catalog.publicapi.ProductQueryFacade;
+import com.example.demo.catalog.publicapi.ProductSummary;
 ```
 
 `Money` 已移至 `shared/`，從 `com.example.demo.shared.Money` import。

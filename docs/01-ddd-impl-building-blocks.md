@@ -20,6 +20,7 @@
 ## 建議學習路徑
 
 按以下順序閱讀，從最小的概念疊加到完整架構。
+每一步先看「關鍵問題」，再點進對應 class；不需要第一次就把所有 annotation 都背起來。
 
 ### Step 1：Value Object — 最小的不可變積木
 
@@ -51,7 +52,7 @@ ordering/domain/OrderItemId.java
 `OrderItem` 有自己的 `OrderItemId`，但它不是獨立的 MongoDB document（沒有 `@Id`）。
 外部無法直接查詢 `OrderItem`，必須透過 `Order` 存取；這就是「Aggregate 是一致性邊界」的意義。
 
-**對應測試：** [`OrderItemTest`](../src/test/java/com/example/demo/ordering/domain/OrderItemTest.java) — 驗證 `subtotal()` 正確計算。
+**對應測試：** [`OrderItemTest`](../src/test/java/com/example/demo/ordering/domain/OrderItemTest.java) — 驗證 `subtotal()` 正確計算，並保留商品名稱與成交價格 snapshot。
 
 ### Step 3：Aggregate Root — 一群物件的守門員
 

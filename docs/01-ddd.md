@@ -10,6 +10,12 @@ DDD 是一套把「業務邏輯」放在程式設計核心的方法論，核心�
 DDD 的做法是讓 `Order` 真正知道自己可以 `place()`（下單）、`cancel()`（取消），  
 並在狀態改變時發布 `OrderPlaced` 事件，讓程式碼本身就能說明業務意圖。
 
+第一次閱讀本章時，先抓住三個問題即可：
+
+- 這段邏輯屬於哪個業務概念？
+- 這個物件能不能被外部直接修改？
+- 跨 Bounded Context 時，誰擁有資料、誰只能透過合約使用資料？
+
 ---
 
 ## Building Blocks
@@ -100,7 +106,7 @@ Shared Kernel 是多個 Context 協議共用的一小塊模型。
 
 #### 跨 Context 溝通方式
 
-依照意圖選擇模式：
+先看互動意圖，再選模式：
 
 | 意圖 | 正確做法 | 不該做 |
 |---|---|---|
@@ -110,6 +116,9 @@ Shared Kernel 是多個 Context 協議共用的一小塊模型。
 | 保存當下事實 | 在自己的 Aggregate 保存 Snapshot | 每次都查對方最新狀態來解釋歷史資料 |
 
 一句話：**可以取得資料，但只能透過 owner Context 設計好的公開契約；取得後要轉成本 Context 的語言。**
+
+第一次讀到這裡時，不需要先記住每個實作細節。
+先記住「保存關聯用 Reference、讀取資料用公開查詢、保存歷史用 Snapshot、通知狀態改變用 Event」即可。
 
 #### Reference Object — 保存關聯身分
 
@@ -226,4 +235,7 @@ Onion Architecture 定義每個 Bounded Context 內部的分層規則，依賴�
 
 ---
 
-→ 本專案的實作對應見 [DDD 實作索引](01-ddd-impl.md)
+→ 本專案的實作對應見：
+[DDD Building Blocks 實作對應](01-ddd-impl-building-blocks.md)、
+[Bounded Context 與跨 Context 實作](01-ddd-impl-bounded-context.md)、
+[DDD Violation Demo](01-ddd-impl-violations.md)

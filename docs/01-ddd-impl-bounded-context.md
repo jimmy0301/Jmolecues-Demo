@@ -2,200 +2,140 @@
 
 本文件對應 [DDD 核心概念](01-ddd.md) 的 Bounded Context、Shared Kernel 與跨 Context 資料存取模式。
 
+閱讀這份文件時，先記住一個原則：
+
+> 跨 Context 可以互動，但只能透過對方刻意公開的合約互動。
+
+`ordering` 可以知道「訂單對應哪個 customer」、「訂單項目對應哪個 product」，也可以查詢商品名稱與價格。
+但它不應該直接 import `customer.domain.Customer`、`catalog.domain.Product`、Repository 或 internal QueryModel。
+
 ---
 
-## Bounded Context 與 Shared Kernel
+## 先看結論
+
+| 需求 | 本專案做法 | 避免做法 |
+|---|---|---|
+| 多個 Context 都需要同一個穩定概念 | 放進 `shared/`，例如 `Money` | 把某個 Context 的 domain type 拿給其他 Context 用 |
+| 保存外部 Aggregate 的身分 | 在本 Context 建立 Reference Object，例如 `ProductReference(UUID)` | 直接持有 `Product` 或直接使用 `ProductId` |
+| 讀取外部 Context 的展示資料 | 使用 owner Context 的 `publicapi` Facade，例如 `ProductQueryFacade` | import 對方的 QueryModel、Repository、domain model |
+| 保存下單當下的商品名稱與價格 | 在 `OrderItem` 保存 snapshot | 每次顯示歷史訂單都查最新商品資料 |
+| 通知其他 Context 發生了什麼事 | 發布 Domain Event，例如 `OrderPlaced` | 直接修改其他 Context 的資料庫 |
+
+---
+
+## Context 邊界長什麼樣
 
 ```mermaid
 graph TD
-    shared["shared（Shared Kernel）\nMoney"]
-    catalog["catalog\nProduct / ProductId"]
+    shared["shared\nMoney"]
+    catalog["catalog\nProduct / ProductId\npublicapi/ProductQueryFacade"]
     customer["customer\nCustomer / CustomerId"]
     ordering["ordering\nOrder / OrderItem\nCustomerReference / ProductReference"]
 
     catalog -->|使用| shared
     ordering -->|使用| shared
+    ordering -->|查詢公開 API| catalog
 ```
 
-**型別歸屬：**
+`Money` 放在 `shared/`，因為 `catalog` 的商品定價和 `ordering` 的訂單金額語義一致。
+`ProductId` 和 `CustomerId` 留在各自 Context 內，因為它們是 owner Context 的 identity type。
 
 | 型別 | 位置 | 說明 |
 |---|---|---|
-| `Money` | `shared/` | 金額 VO；`catalog` 定價、`ordering` 訂單項目都需要，語義完全一致 → 放 Shared Kernel |
-| `CustomerId` | `customer/domain/` | customer context 自用；`ordering` 不 import，改用 `CustomerReference(UUID)` |
-| `ProductId` | `catalog/domain/` | catalog context 自用；`ordering` 不 import，改用 `ProductReference(UUID)` |
-
-`Money` 若留在 `catalog.domain`，`ordering` 就必須依賴 `catalog` 的內部 package，Spring Modulith 會偵測為模組邊界違規。移至 Shared Kernel 後，雙方都可合法使用。
-
-`CustomerId` / `ProductId` 語義上屬於各自的 Context，不放 Shared Kernel。`ordering` 透過 Reference 物件以 UUID 參照，完全不 import 其他 Context 的型別。
+| `Money` | `shared/` | Shared Kernel；多個 Context 共用且語義一致 |
+| `ProductId` | `catalog/domain/` | catalog 內部 identity；ordering 不 import |
+| `CustomerId` | `customer/domain/` | customer 內部 identity；ordering 不 import |
+| `ProductReference` | `ordering/domain/` | ordering 對 product 的參照 |
+| `CustomerReference` | `ordering/domain/` | ordering 對 customer 的參照 |
 
 ---
 
-## 跨 Context 邊界
+## Step 1：用 Reference Object 保存關聯
 
-`ordering` 需要記錄「這筆訂單屬於哪個顧客」、「這個訂單項目是哪個商品」，
-但 `ordering.domain` **不 import** 任何其他 Context 的型別。
-
-### Reference 物件
-
-在 `ordering/domain/` 定義兩個包裝 UUID 的 `@ValueObject`：
+`ordering` 需要記錄顧客與商品，但不持有對方 Aggregate。
+做法是在 `ordering/domain/` 定義包裝 UUID 的 Value Object：
 
 ```java
-@ValueObject public record CustomerReference(UUID id) {}
-@ValueObject public record ProductReference(UUID id) {}
+@ValueObject
+public record CustomerReference(UUID id) {}
+
+@ValueObject
+public record ProductReference(UUID id) {}
 ```
 
-**不實作 `Identifier` 的原因**：jMolecules ByteBuddy 會對所有實作 `Identifier` 的欄位加上 `@Id`。
-若 `CustomerReference implements Identifier`，`Order` 裡就有兩個 `@Id`（`OrderId` + `CustomerReference`），MongoDB 啟動時會拋出 `MappingException`。
-
-**不用 `Association<Customer, CustomerId>` 的原因**：jMolecules ArchUnit DDD rules（v2025.0.2）會掃描泛型型別參數，
-把 `Association<Customer, CustomerId>` 中的 `Customer`（implements `AggregateRoot`）誤判為「直接持有 AggregateRoot」，產生誤報。
-
-### 使用方式
+Aggregate 內只保存 reference：
 
 ```java
-// Order — 接受 UUID，包裝成 CustomerReference
-public Order(UUID customerId) {
-    this.customer = new CustomerReference(customerId);
+public class Order {
+    private CustomerReference customer;
 }
 
-// OrderItem — 接受 UUID，包裝成 ProductReference
-public OrderItem(UUID productId, Quantity quantity, Money unitPrice) {
-    this.product = new ProductReference(productId);
+public class OrderItem {
+    private ProductReference product;
 }
 ```
 
-應用層（Command、Controller）直接使用 `UUID`，不需 import 其他 Context 的型別：
+不要這樣做：
 
 ```java
-@Command
-public record CreateOrderCommand(UUID customerId) {}
+// ordering 不應該 import customer.domain.Customer
+private Customer customer;
+
+// ordering 也不直接使用 customer.domain.CustomerId
+private CustomerId customerId;
 ```
 
-### 違規展示
+### 為什麼不用 Identifier 或 Association？
 
-```java
-// ❌ BadOrder.java — 直接持有 Customer 物件（跨越邊界）
-public class BadOrder {
-    private Customer customer;  // ordering 與 customer 緊耦合
-}
-```
+`CustomerReference` / `ProductReference` 不實作 `Identifier`。
+jMolecules ByteBuddy 會對所有實作 `Identifier` 的欄位加上 `@Id`；如果 `Order` 同時有 `OrderId` 和 `CustomerReference implements Identifier`，MongoDB 會看到兩個 `@Id`。
+
+本專案也不使用 `Association<Customer, CustomerId>`。
+jMolecules ArchUnit DDD rules 會檢查泛型參數，容易把 `Association<Customer, CustomerId>` 裡的 `Customer` 判定成直接持有外部 Aggregate。
 
 ---
 
-## 讀取另一個 Context 的資料：publicapi Facade
+## Step 2：用 publicapi 讀取外部資料
 
-若未來 `ordering` 建立訂單項目時需要讀取 `catalog` 的商品名稱與價格，不應直接 import：
+讀取外部 Context 的資料時，依賴 owner Context 公開的 API，不依賴它的內部實作。
+
+在 `catalog/publicapi/`：
+
+| 檔案 | 角色 |
+|---|---|
+| [`package-info.java`](../src/main/java/com/example/demo/catalog/publicapi/package-info.java) | 用 `@NamedInterface("public-api")` 讓 Spring Modulith 知道這是公開介面 |
+| [`ProductSummary.java`](../src/main/java/com/example/demo/catalog/publicapi/ProductSummary.java) | 跨 Context 回傳用 DTO |
+| [`ProductQueryFacade.java`](../src/main/java/com/example/demo/catalog/publicapi/ProductQueryFacade.java) | 封裝 catalog 內部查詢方式 |
+
+`ProductSummary` 是公開契約，所以欄位使用穩定型別：
 
 ```java
-// ❌ ordering 不應依賴 catalog 的 internal package
+public record ProductSummary(UUID id, String name, BigDecimal amount, String currency) {}
+```
+
+`ProductQueryFacade` 可以依賴 `catalog.application` 和 `catalog.domain`，因為它仍然屬於 `catalog` 內部。
+其他 Context 只看見 `catalog.publicapi`：
+
+```java
+import com.example.demo.catalog.publicapi.ProductQueryFacade;
+import com.example.demo.catalog.publicapi.ProductSummary;
+```
+
+不要從 `ordering` import 這些 internal type：
+
+```java
 import com.example.demo.catalog.application.ProductQueryModel;
 import com.example.demo.catalog.domain.Product;
 import com.example.demo.catalog.domain.ProductId;
 import com.example.demo.catalog.domain.ProductRepository;
 ```
 
-正確做法是在 owner Context 建立專門給其他 Bounded Context 使用的 `publicapi/` package。
-因為 `publicapi` 是 sub-package，Spring Modulith 預設仍會視為 internal；要用 `@NamedInterface` 明確公開。
-
-```java
-// catalog/publicapi/package-info.java
-@NamedInterface("public-api")
-@ApplicationServiceRing
-package com.example.demo.catalog.publicapi;
-
-import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
-import org.springframework.modulith.NamedInterface;
-```
-
-```java
-// catalog/publicapi/ProductSummary.java
-package com.example.demo.catalog.publicapi;
-
-import java.math.BigDecimal;
-import java.util.UUID;
-
-public record ProductSummary(UUID id, String name, BigDecimal amount, String currency) {}
-```
-
-```java
-// catalog/publicapi/ProductQueryFacade.java
-package com.example.demo.catalog.publicapi;
-
-import com.example.demo.catalog.application.ProductQueryModel;
-import com.example.demo.catalog.domain.ProductId;
-import java.util.Optional;
-import java.util.UUID;
-import org.springframework.stereotype.Component;
-
-@Component
-public class ProductQueryFacade {
-
-    private final ProductQueryModel productQueryModel;
-
-    public ProductQueryFacade(ProductQueryModel productQueryModel) {
-        this.productQueryModel = productQueryModel;
-    }
-
-    public Optional<ProductSummary> findById(UUID id) {
-        return productQueryModel
-                .findById(new ProductId(id))
-                .map(
-                        product ->
-                                new ProductSummary(
-                                        product.getId().id(),
-                                        product.getName(),
-                                        product.getPrice().amount(),
-                                        product.getPrice().currency()));
-    }
-}
-```
-
-`ProductQueryFacade` 可以依賴 `catalog.application` / `catalog.domain`，因為它仍在 `catalog` 模組內部。
-`ordering` 依賴 `catalog.publicapi.ProductQueryFacade` 與 `catalog.publicapi.ProductSummary`
-是一條明確的跨 Bounded Context 依賴，但不會違反 Spring Modulith：
-`publicapi` 已被 `@NamedInterface` 公開，而 `Product`、`ProductId`、`ProductRepository` 仍留在 internal package。
-
-```java
-// ordering/application/OrderService.java
-import com.example.demo.catalog.publicapi.ProductQueryFacade;
-import com.example.demo.catalog.publicapi.ProductSummary;
-
-@Service
-public class OrderService {
-
-    private final OrderRepository orderRepository;
-    private final ProductQueryFacade productQueryFacade;
-
-    public OrderService(OrderRepository orderRepository, ProductQueryFacade productQueryFacade) {
-        this.orderRepository = orderRepository;
-        this.productQueryFacade = productQueryFacade;
-    }
-
-    private ProductSummary findProduct(UUID productId) {
-        return productQueryFacade
-                .findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
-    }
-}
-```
-
 ---
 
-## 保存當下事實：OrderItem Snapshot
+## Step 3：用 Snapshot 保存歷史事實
 
-目前 `OrderItem` 保存 `ProductReference` 與 `unitPrice`：
-
-```java
-public class OrderItem implements Entity<Order, OrderItemId> {
-
-    private ProductReference product;
-    private Quantity quantity;
-    private Money unitPrice;
-}
-```
-
-若需求變成「訂單明細要顯示下單當下的商品名稱與成交價格」，可以讓 `ordering` 保存 snapshot：
+商品名稱與價格由 `catalog` 擁有，但「下單當下的商品名稱與成交價格」屬於 `ordering` 的訂單事實。
+因此 `OrderItem` 保存 snapshot：
 
 ```java
 public class OrderItem implements Entity<Order, OrderItemId> {
@@ -205,61 +145,51 @@ public class OrderItem implements Entity<Order, OrderItemId> {
     private Money unitPriceSnapshot;
     private Quantity quantity;
 
-    public OrderItem(UUID productId, String productName, Quantity quantity, Money unitPrice) {
-        this.product = new ProductReference(productId);
-        this.productNameSnapshot = productName;
-        this.quantity = quantity;
-        this.unitPriceSnapshot = unitPrice;
-    }
-
     public Money subtotal() {
         return unitPriceSnapshot.multiply(quantity.value());
     }
 }
 ```
 
-這裡的 `productNameSnapshot` / `unitPriceSnapshot` 不再是 `catalog` 的資料副本，而是 `ordering` 的歷史事實：
+判斷是否需要 snapshot，可以問：
+
+> 外部資料改變時，既有紀錄是否也應跟著改？
+
+如果答案是否定的，就保存 snapshot。
 商品日後改名或調價，不應改變已成立訂單的明細。
 
 ---
 
-## 更新另一個 Context：Command Facade 或 Event
+## Step 4：跨 Context update 用 Command Facade 或 Event
 
-跨 Context update 不應直接拿對方 Repository，也不應直接改對方資料庫。
-若需要同步知道成功或失敗，owner Context 可以在 `publicapi` 提供 Command Facade。
-以下是「catalog 未來若支援庫存保留」時的概念草案，`ReserveStockCommand` 尚未在目前專案中實作：
+跨 Context update 的重點是：不要直接拿對方 Repository，也不要直接改對方資料庫。
 
-```java
-// catalog/publicapi/ProductCommandFacade.java
-package com.example.demo.catalog.publicapi;
+依照 use case 選擇方式：
 
-import com.example.demo.catalog.application.ProductService;
-import java.util.UUID;
-import org.springframework.stereotype.Component;
+| 情境 | 做法 |
+|---|---|
+| 呼叫方需要同步知道成功或失敗 | owner Context 在 `publicapi` 提供 Command Facade |
+| 呼叫方只需要宣告某件事已發生 | 發布事件，讓其他 Context 自己訂閱 |
 
-@Component
-public class ProductCommandFacade {
-
-    private final ProductService productService;
-
-    public ProductCommandFacade(ProductService productService) {
-        this.productService = productService;
-    }
-
-    public void reserveStock(UUID productId, int quantity) {
-        // 範例：實際 command 需由 catalog 定義，規則仍由 catalog 自己執行
-        productService.handle(new ReserveStockCommand(productId, quantity));
-    }
-}
-```
-
-若不需要同步結果，優先發布事件，讓對方 Context 自己訂閱並處理：
+本專案的事件流程：
 
 ```text
 ordering.domain.Order.place()
     -> OrderPlaced(orderId, occurredOn)
     -> repository.save(order)
-    -> catalog / inventory listener reacts
+    -> interested listeners react
 ```
 
-事件被其他 Context 消費時，就成為跨 Context 合約；公開事件不要包含 owner 的 internal domain 型別。
+事件被其他 Context 消費時，就成為跨 Context 合約。
+公開事件不要包含 owner 的 internal domain 型別。
+
+---
+
+## 新增跨 Context 互動時的檢查清單
+
+- 先確認資料 owner 是哪個 Context
+- 不 import 對方的 `domain`、`application`、`repository` package
+- 只透過 `publicapi`、事件或本地 Reference Object 互動
+- Public DTO 不回傳 Aggregate、Entity、Repository、internal Value Object
+- 歷史資料需要穩定呈現時，在本 Context 保存 snapshot
+- 新增公開合約後，補測試並跑架構驗證

@@ -40,9 +40,9 @@ ordering/
 
 | Class | Ring | 類型 | 說明 |
 |---|---|---|---|
-| `Order` | domain | AggregateRoot | 訂單主體，持有 `CustomerId`（跨 Context ID） |
+| `Order` | domain | AggregateRoot | 訂單主體，持有 `CustomerReference`（跨 Context 參照） |
 | `OrderId` | domain | ID / ValueObject | `@ValueObject record` implements `Identifier` |
-| `OrderItem` | domain | Entity | `implements Entity<Order, OrderItemId>`，含 `ProductId` |
+| `OrderItem` | domain | Entity | `implements Entity<Order, OrderItemId>`，含 `ProductReference` 與商品 snapshot |
 | `OrderItemId` | domain | ID / ValueObject | OrderItem 的 ID |
 | `Quantity` | domain | ValueObject | 數量（不可為負） |
 | `OrderStatus` | domain | Enum | PENDING / PLACED / CANCELLED |

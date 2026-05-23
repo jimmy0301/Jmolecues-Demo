@@ -14,6 +14,7 @@ class OrderItemTest {
         var item =
                 new OrderItem(
                         UUID.randomUUID(),
+                        "Widget",
                         Quantity.of(3),
                         Money.of(new BigDecimal("20.00"), "USD"));
 
@@ -21,5 +22,17 @@ class OrderItemTest {
 
         assertThat(subtotal.amount()).isEqualByComparingTo("60.00");
         assertThat(subtotal.currency()).isEqualTo("USD");
+    }
+
+    @Test
+    void constructor_preservesProductNameAndUnitPriceSnapshots() {
+        var productId = UUID.randomUUID();
+        var unitPrice = Money.of(new BigDecimal("12.50"), "USD");
+
+        var item = new OrderItem(productId, "Widget", Quantity.of(2), unitPrice);
+
+        assertThat(item.getProduct().id()).isEqualTo(productId);
+        assertThat(item.getProductNameSnapshot()).isEqualTo("Widget");
+        assertThat(item.getUnitPriceSnapshot()).isEqualTo(unitPrice);
     }
 }

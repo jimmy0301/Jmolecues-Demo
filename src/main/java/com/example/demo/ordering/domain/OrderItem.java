@@ -15,17 +15,27 @@ public class OrderItem implements Entity<Order, OrderItemId> {
     private ProductReference product;
 
     private Quantity quantity;
-    private Money unitPrice;
+    private String productNameSnapshot;
+    private Money unitPriceSnapshot;
 
     protected OrderItem() {}
 
     public OrderItem(UUID productId, Quantity quantity, Money unitPrice) {
+        this(productId, null, quantity, unitPrice);
+    }
+
+    public OrderItem(UUID productId, String productName, Quantity quantity, Money unitPrice) {
         this.product = new ProductReference(productId);
+        this.productNameSnapshot = productName;
         this.quantity = quantity;
-        this.unitPrice = unitPrice;
+        this.unitPriceSnapshot = unitPrice;
     }
 
     public Money subtotal() {
-        return unitPrice.multiply(quantity.value());
+        return unitPriceSnapshot.multiply(quantity.value());
+    }
+
+    public Money getUnitPrice() {
+        return unitPriceSnapshot;
     }
 }

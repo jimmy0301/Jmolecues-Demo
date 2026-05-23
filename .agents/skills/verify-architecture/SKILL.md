@@ -1,0 +1,34 @@
+---
+name: verify-architecture
+description: 執行完整的架構驗證（Spotless + ArchUnit + Spring Modulith）並回報結果
+---
+
+執行完整的架構驗證並回報結果。
+
+步驟：
+
+1. 格式化所有 Java 檔案
+```bash
+mvn spotless:apply
+```
+
+2. 執行 ArchUnit 架構測試
+```bash
+mvn test -Dtest=JMoleculesArchitectureTest
+```
+
+3. 執行 Spring Modulith 模組驗證與文件產生
+```bash
+mvn test -Dtest=ModularityTest
+```
+
+4. 回報結果，說明：
+   - ArchUnit 哪些測試通過、哪些失敗（預期失敗的 violation demo 需標注）
+   - Spring Modulith 產生的文件位置（`target/spring-modulith-docs/`）
+   - 若有非預期的失敗，分析原因並建議修正
+
+**預期失敗（不需修復）：**
+
+預期失敗的測試對應專案中刻意保留的 violation demo class。
+判斷方式：查看 `.Codex/rules/testing.md` 的「預期失敗對照表」，標注為 violation demo 的失敗均屬預期行為，不需修復。
+非預期失敗（不在 violation demo 清單內）才需要分析原因並修正。

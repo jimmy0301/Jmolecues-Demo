@@ -29,7 +29,7 @@
 
 ### 2. 實作範例說明
 
-4. [DDD 實作](docs/01-ddd-impl.md)
+4. DDD 實作對應
    — 從概念跳到本專案程式碼位置
 
    - [DDD Building Blocks 實作對應](docs/01-ddd-impl-building-blocks.md)
