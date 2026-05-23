@@ -6,42 +6,58 @@
 我們用一個簡單的電商範例（`catalog` / `customer` / `ordering` 三個 Bounded Context）貫穿所有概念。  
 範例以 Java + Spring Boot 實作，並以 [jMolecules](https://github.com/xmolecules/jmolecules) annotation 在程式碼中明確標記每個 DDD 角色，讓你讀 code 時不需要猜測。
 
-**讀完這份文件，你會知道：**
+**建議閱讀方式：**
 
-- 我們為什麼用 DDD，以及 AggregateRoot / ValueObject / DomainEvent 這些詞在程式碼裡對應什麼
-- 我們如何用 Onion Architecture 組織程式碼的分層結構
-- 我們如何用 CQRS 分離寫入與讀取
-- 我們選了哪些工具，以及為什麼這樣選
-- 如何用內建的 Claude Code Skills 快速新增符合規範的程式碼
+- 先讀設計概念，理解我們為什麼這樣切程式碼
+- 再看本專案實作，知道每個概念對應到哪些 package / class
+- 最後看技術棧與 Agent Skills，學會如何新增符合規範的程式碼
 
 ---
 
 ## 學習路徑
 
+### 1. 軟體設計概念
+
 1. [Domain-Driven Design 核心概念](docs/01-ddd.md)  
-   — Building blocks 定義、Bounded Context、Shared Kernel、跨 Context 溝通  
-   &nbsp;&nbsp;&nbsp;&nbsp;↳ [DDD 實作說明](docs/01-ddd-impl.md) — 本專案對照表、Reference 物件模式、學習路徑、violation demo
+   — Building Blocks、Bounded Context、Shared Kernel、跨 Context 資料存取模式
 
 2. [Onion Architecture — 洋蔥分層](docs/04-onion.md)  
-   — 四個 Ring 職責、依賴方向規則  
-   &nbsp;&nbsp;&nbsp;&nbsp;↳ [Onion Architecture 實作說明](docs/04-onion-impl.md) — Ring annotation、package-info.java、ArchUnit 驗證
+   — 四個 Ring 的職責、依賴方向、Domain / Application / Infrastructure 的邊界
 
 3. [CQRS — 命令與查詢分離](docs/03-cqrs.md)  
-   — 核心概念、Command vs Query、執行流程圖  
-   &nbsp;&nbsp;&nbsp;&nbsp;↳ [CQRS 實作說明](docs/03-cqrs-impl.md) — jMolecules annotations、程式碼範例、violation demo
+   — Command vs Query、寫入流程、讀取模型、事件如何銜接
 
-4. [技術棧說明](docs/02-tech-stack.md)  
-   — 採用的框架與工具、各自的職責與選擇理由
+### 2. 實作範例說明
 
-5. [Claude Code Skills 說明](docs/05-skills.md)  
-   — 內建 Skill 一覽、用法範例、典型開發流程
+4. [DDD 實作](docs/01-ddd-impl.md)
+   — 從概念跳到本專案程式碼位置
 
-6. [跨 Bounded Context 存取資料的設計模式](docs/06-cross-context-data-access.md)  
-   — Spring Modulith 可見性規則、反模式、公開 API 設計、Reference Object vs Facade vs Domain Event
+   - [DDD Building Blocks 實作對應](docs/01-ddd-impl-building-blocks.md)
+     — Aggregate Root、Entity、Value Object、Domain Event、Repository、Domain Service
+
+   - [Bounded Context 與跨 Context 實作](docs/01-ddd-impl-bounded-context.md)
+     — Shared Kernel、Reference Object、publicapi Facade、Snapshot、跨 Context update
+
+   - [DDD Violation Demo](docs/01-ddd-impl-violations.md)
+     — 刻意保留的錯誤範例，以及架構測試如何抓到
+
+5. [Onion Architecture 實作說明](docs/04-onion-impl.md)
+   — package-info.java、Ring annotation、ArchUnit 驗證
+
+6. [CQRS 實作說明](docs/03-cqrs-impl.md)
+   — jMolecules CQRS annotations、Command / QueryModel / CommandHandler 範例
+
+### 3. 技術棧與日常開發工具
+
+7. [技術棧說明](docs/02-tech-stack.md)
+   — Spring Boot、MongoDB、jMolecules、Spring Modulith、ArchUnit、OpenAPI Generator、Spotless
+
+8. [Agent Skills 說明](docs/05-skills.md)
+   — 如何新增 Bounded Context、Aggregate、Entity、Repository、Domain Event、Service，並執行架構驗證
 
 ---
 
-## 快速開始
+## 驗證指令
 
 ```bash
 # 格式化
@@ -58,6 +74,8 @@ mvn test -Dtest=ModularityTest
 ```
 
 **預期結果**：
+
+本專案刻意保留 violation demo，所以部分架構測試預期失敗；這是教學用途，不代表專案壞掉。
 
 | 測試 | 結果 | 說明 |
 |---|---|---|

@@ -1,13 +1,13 @@
-# Chapter 5：Claude Code Skills 說明
+# Chapter 5：Agent Skills 說明
 
-本章說明專案內建的 Claude Code Skill，每個 Skill 封裝一個常見的 DDD 開發任務，確保每次操作都遵循專案規則。
+本章說明專案內建的 Agent Skill，每個 Skill 封裝一個常見的 DDD 開發任務，確保每次操作都遵循專案規則。
 
 ---
 
 ## 什麼是 Skill？
 
-Skill 是放在 `.claude/skills/<name>/SKILL.md` 的提示模板，在 Claude Code 的對話框輸入 `/<skill-name>` 即可執行。  
-每個 Skill 包含固定步驟、程式碼模板、以及完成後的驗證指令，讓 Claude 不需要重新推導每次操作應該怎麼做。
+Skill 是放在 `.agents/skills/<name>/SKILL.md` 的提示模板，在 Agent 的對話框輸入 `/<skill-name>` 即可執行。
+每個 Skill 包含固定步驟、程式碼模板、以及完成後的驗證指令，讓 Agent 不需要重新推導每次操作應該怎麼做。
 
 **執行方式：**
 
