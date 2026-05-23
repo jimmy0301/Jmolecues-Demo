@@ -36,6 +36,9 @@
 5. [Claude Code Skills 說明](docs/05-skills.md)  
    — 內建 Skill 一覽、用法範例、典型開發流程
 
+6. [跨 Bounded Context 存取資料的設計模式](docs/06-cross-context-data-access.md)  
+   — Spring Modulith 可見性規則、反模式、公開 API 設計、Reference Object vs Facade vs Domain Event
+
 ---
 
 ## 快速開始
