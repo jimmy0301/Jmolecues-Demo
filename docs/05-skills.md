@@ -28,6 +28,8 @@ Skill 是放在 `.agents/skills/<name>/SKILL.md` 的提示模板，在 Agent 的
 | `/new-service` | 建立 Domain Service 或 Application Service | `<type> <context> <ServiceName>` |
 | `/new-repository` | 為 AggregateRoot 建立 Repository（含框架分離方案） | `<context> <AggregateName>` |
 | `/verify-architecture` | 執行完整架構驗證（Spotless + ArchUnit + Modulith） | 無 |
+| `/review-pr-draft` | Review 別人的 PR/MR，只產出 review comment 草稿表格 | `<pr-or-mr-url>` |
+| `/triage-pr-comments` | 整理別人 review 自己 PR/MR 的 active comments，含行數、程式碼片段與回覆草稿 | `<pr-or-mr-url>` |
 
 ---
 
@@ -268,6 +270,66 @@ infrastructure/repository/jpa/
 | `commandsShouldResideInCommandPackage` | `BadCommand`（放在 context root） |
 | `commandHandlersShouldBeInApplicationLayer` | `BadDomainHandler`（在 context root） |
 | `verifiesModularStructure` | `BadOrder`、`BadCommand`（跨模組邊界） |
+
+---
+
+## `/review-pr-draft`
+
+**用途：** Review 別人的 GitHub PR、GitLab MR 或 Azure DevOps PR，只產出草稿，不發布 comment、不提交 review、不 approve/request changes。
+
+**用法：**
+```
+/review-pr-draft <pr-or-mr-url>
+```
+
+**輸出表格：**
+
+| # | Priority | Type | File | Lines | Code snippet | Finding | Risk | Draft review comment | Blocking |
+|---|---|---|---|---|---|---|---|---|---|
+
+**平台支援：**
+
+| 平台 | Review 目標 | 相關資料 |
+|---|---|---|
+| GitHub | Pull Request | PR metadata、diff、review threads、check runs |
+| GitLab | Merge Request | MR metadata、diff、discussions、pipelines |
+| Azure DevOps | Pull Request | PR metadata、diff、comment threads、policies/checks |
+
+**規則：**
+- 只產出草稿，不寫回平台
+- 優先檢查 correctness、架構邊界、測試、相容性、安全與營運風險
+- 找不到 actionable issue 時，明確說明沒有發現阻塞問題，並列出剩餘風險或測試缺口
+
+---
+
+## `/triage-pr-comments`
+
+**用途：** 整理別人 review 自己 PR/MR 後留下的 active comments，只抓尚未 resolved / closed / inactive 的 comments，產出處理表格與回覆草稿。
+
+**用法：**
+```
+/triage-pr-comments <pr-or-mr-url>
+```
+
+**輸出表格：**
+
+| # | Status | Priority | Type | Reviewer | File | Lines | Code snippet | Comment summary | Agent judgment | Suggested action | Reply draft |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+
+**Active comments 定義：**
+
+| 平台 | 納入 | 排除 |
+|---|---|---|
+| GitHub | unresolved review threads、active review comments | resolved、outdated、dismissed、非 actionable bot comments |
+| GitLab | unresolved discussions | resolved discussions、obsolete diff notes |
+| Azure DevOps | active comment threads | closed、fixed、won't fix、resolved、inactive threads |
+
+**規則：**
+- 每筆 active comment 必須帶檔案、行數或行數範圍
+- 每筆 active comment 必須附最小必要程式碼片段，預設 comment 行上下各 3 行
+- 沒有行號的 active comment 放在 `General comments`
+- 已 resolved / outdated / closed 的 comments 預設略過，最後只回報略過數量
+- 只產出 reply draft，不發布、不 resolve thread、不改 PR/MR 狀態
 
 ---
 
