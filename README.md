@@ -61,6 +61,9 @@
 9. [技術棧說明](docs/02-tech-stack.md)
    — Spring Boot、MongoDB、Flamingock、jMolecules、Spring Modulith、ArchUnit、OpenAPI Generator、WireMock、Spotless
 
+   - [Flamingock Data Migration](docs/02-tech-stack-flamingock.md)
+     — MongoDB index、data migration、rollback、testing 規範
+
 10. [Agent Skills 說明](docs/05-skills.md)
    — 如何新增 Bounded Context、Aggregate、Entity、Repository、Domain Event、Service，並執行架構驗證
 

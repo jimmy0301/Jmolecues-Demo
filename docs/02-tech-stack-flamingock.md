@@ -68,7 +68,7 @@ Flamingock 是本專案 data migration 的標準工具，用來把資料庫欄�
 
 ## Spring Boot 設定範例
 
-以下是新人理解用範例，實際 dependency 版本以導入時的 Flamingock BOM / plugin 設定為準。
+以下是新人理解用範例，實際 dependency 與 plugin 版本需在第一次導入 Flamingock 時固定於 `pom.xml`。
 
 ```xml
 <dependency>

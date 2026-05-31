@@ -4,26 +4,33 @@
 
 ## 技術棧
 
-| 類別 | 技術 | 版本 |
-|---|---|---|
-| 語言 / 平台 | Java | 17 |
-| 框架 | Spring Boot | 3.5.14 |
-| Web | Spring Boot Starter Web | — |
-| API 規格 | OpenAPI Generator Maven Plugin | 7.12.0 |
-| 資料庫 | Spring Data MongoDB | — |
-| Data Migration | Flamingock | 依導入時 BOM / plugin |
-| DDD Annotations | jMolecules DDD | BOM 2025.0.2 |
-| DDD Events | jMolecules Events | BOM 2025.0.2 |
-| 架構風格 | jMolecules Onion Architecture（Classical） | BOM 2025.0.2 |
-| 架構風格 | jMolecules CQRS Architecture | BOM 2025.0.2 |
-| Spring 整合 | jMolecules Spring Integration | BOM 2025.0.2 |
-| Bytecode 轉換 | jMolecules ByteBuddy（nodep） + ByteBuddy Maven Plugin | BOM / 1.14.12 |
-| 模組管理 | Spring Modulith Starter Core | 1.3.5 |
-| 模組事件 | Spring Modulith Events API | 1.3.5 |
-| 架構測試 | jMolecules ArchUnit + Spring Modulith Test | BOM / 1.3.5 |
-| 單元測試 | JUnit Jupiter + AssertJ + Mockito | 5.12.2 / 3.27.7 / 5.17.0 |
-| 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 |
-| 樣板程式碼 | Lombok | 1.18.46 |
+| 類別 | 技術 | 版本 | 職責 |
+|---|---|---|---|
+| 語言 / 平台 | Java | 17 | — |
+| 框架 | Spring Boot | 3.5.14 | 應用程式骨架 |
+| Web | Spring Boot Starter Web | — | REST 端點 |
+| API 規格 | OpenAPI Generator Maven Plugin | 7.12.0 | 從 YAML spec 產生 Spring server interface |
+| 資料庫 | Spring Data MongoDB | — | 持久化 |
+| Data Migration | Flamingock | 導入時固定於 pom.xml | application-level Change-as-Code、MongoDB index、data migration、audit / rollback |
+| DDD Annotations | jMolecules DDD | BOM 2025.0.2 | 在程式碼中表達 DDD 角色 |
+| DDD Events | jMolecules Events | BOM 2025.0.2 | `@DomainEvent`、`@DomainEventHandler` |
+| 架構風格 | jMolecules Onion Architecture | BOM 2025.0.2 | Onion 分層 annotation |
+| 架構風格 | jMolecules CQRS Architecture | BOM 2025.0.2 | CQRS annotation |
+| Spring 整合 | jMolecules Spring Integration | BOM 2025.0.2 | ByteBuddy 產生 Spring Data 相容程式碼 |
+| Bytecode 轉換 | jMolecules ByteBuddy（nodep） | BOM 2025.0.2 | 編譯期自動產生樣板程式碼 |
+| Bytecode 插件 | ByteBuddy Maven Plugin | 1.14.12 | 觸發 ByteBuddy 轉換的 Maven 插件 |
+| 模組管理 | Spring Modulith Starter Core | 1.3.5 | Bounded Context 邊界驗證與文件 |
+| 模組事件 | Spring Modulith Events API | 1.3.5 | `@ApplicationModuleListener` |
+| 架構測試 | jMolecules ArchUnit | BOM 2025.0.2 | DDD / Onion 規則自動驗證 |
+| 架構測試 | Spring Modulith Test | 1.3.5 | 模組結構測試 |
+| 單元測試 | JUnit Jupiter | 5.12.2 | 單元測試框架（via spring-boot-starter-test） |
+| 單元測試 | AssertJ | 3.27.7 | Fluent assertion（via spring-boot-starter-test） |
+| 單元測試 | Mockito | 5.17.0 | Mock / Stub（via spring-boot-starter-test） |
+| API 測試 | Spring MVC Test（MockMvc） | — | `@WebMvcTest` Controller slice 測試，不需啟動 MongoDB |
+| 整合測試 | Testcontainers（MongoDB） | 1.21.4 | 在真實 MongoDB 容器中執行 Repository / migration 整合測試 |
+| HTTP Stub 測試 | WireMock | — | Stub 外部 HTTP API，驗證 adapter 與 contract mapping |
+| 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 | 強制統一格式 |
+| 樣板程式碼 | Lombok | 1.18.46 | `@Getter`、`@Builder` 等 |
 
 ## Bounded Context（Onion Architecture — Classical）
 ```
