@@ -168,7 +168,7 @@ CQRS 的 Command / QueryModel 屬於 application 層；API request / response DT
 | 物件 | 所在層 | 可以做什麼 | 不該做什麼 |
 |---|---|---|---|
 | API request DTO | infrastructure/web | 表達 HTTP payload | 被 application service 或 domain model 接收 |
-| Command | application/command | 表達 use case 意圖 | 直接拿來當 JSON response 或 OpenAPI model |
+| Command | `@ApplicationServiceRing` package | 表達 use case 意圖 | 直接拿來當 JSON response 或 OpenAPI model |
 | QueryModel | application | 組裝 read side 資料 | 呼叫 CommandHandler、save/delete、publish event |
 | API response DTO | infrastructure/web | 表達 HTTP response contract | 洩漏 Aggregate、Entity、Domain Event internal state |
 

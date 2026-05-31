@@ -8,8 +8,8 @@
 
 | Annotation | 套用對象 | 職責 |
 |---|---|---|
-| `@Command` | class / record | 封裝操作意圖，必須不可變，放在 `application.command` 套件 |
-| `@CommandHandler` | method | 接收 Command 執行狀態改變，只能在 application 層 |
+| `@Command` | class / record | 封裝操作意圖，必須不可變，位於標記 `@ApplicationServiceRing` 的 package |
+| `@CommandHandler` | method | 接收 Command 執行狀態改變，只能在標記 `@ApplicationServiceRing` 的 package |
 | `@QueryModel` | class | 只讀取，不可呼叫任何 `@CommandHandler` |
 | `@CommandDispatcher` | method | 將 Command 分派給 Handler（選用標記） |
 
@@ -50,13 +50,14 @@ ordering/
 
 ## @Command
 
-Command 必須**不可變**，且只能放在 `*.application.command` 套件。
+Command 必須**不可變**，且必須位於標記 `@ApplicationServiceRing` 的 package。
+`application.command` 是本專案 convention，但架構測試以 package-info annotation 為準。
 Command 表達 use case 意圖，不是 HTTP request DTO；即使欄位和 API payload 一樣，也要由 Controller 明確轉換。
 若 command 可能由外部重送，需設計 request id / command id 或明確定義重送語意。
 本專案示範 `PlaceOrderCommand` 的重送語意：訂單已是 `PLACED` 時再次 `place()` 視為 no-op，不重複登記 `OrderPlaced`。
 
 ```java
-// ✅ 正確：record 天生不可變，位於 application.command
+// ✅ 正確：record 天生不可變，位於 @ApplicationServiceRing package
 @Command
 public record PlaceOrderCommand(OrderId orderId) {}
 
@@ -72,7 +73,7 @@ public class PlaceOrderCommand {
 
 ## @CommandHandler
 
-只能在 application 層（`*.application.*`）。Handler 協調 Repository 與 Event，業務邏輯留在 Aggregate。
+只能在標記 `@ApplicationServiceRing` 的 package。Handler 協調 Repository 與 Event，業務邏輯留在 Aggregate。
 每個 handler 原則上只修改一個 Aggregate；需要觸發其他 Aggregate 或 Context 時，依靠已登記的 Domain Event、Process Manager 或 Saga。
 Transport validation 在 Controller，業務 invariant 在 Aggregate，Handler 只做 use case validation 與協調。
 若兩個 command 同時修改同一個 Aggregate，預設使用 Aggregate 的 `@Version` 欄位做樂觀鎖偵測；handler 不應用額外查詢繞過 repository 的版本檢查。
@@ -223,6 +224,6 @@ class OrderControllerTest {
 
 | Class | 違規 | 觸發測試 |
 |---|---|---|
-| [`BadCommand`](../src/main/java/com/example/demo/ordering/BadCommand.java) | ① `@Command` 有 public 可變欄位；② 放在 context root 而非 `application.command` | `commandsShouldBeImmutable`、`commandsShouldResideInCommandPackage` |
+| [`BadCommand`](../src/main/java/com/example/demo/ordering/BadCommand.java) | ① `@Command` 有 public 可變欄位；② 放在未標記 `@ApplicationServiceRing` 的 context root | `commandsShouldBeImmutable`、`commandsShouldResideInApplicationServiceRing` |
 | [`BadQueryModel`](../src/main/java/com/example/demo/ordering/BadQueryModel.java) | `@QueryModel` 呼叫 `@CommandHandler` | `queryModelsShouldNotTriggerCommands` |
 | [`BadDomainHandler`](../src/main/java/com/example/demo/ordering/BadDomainHandler.java) | `@CommandHandler` 在 domain 層 | `commandHandlersShouldBeInApplicationLayer` |

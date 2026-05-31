@@ -4,23 +4,35 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.domain.JavaParameterizedType;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Set;
 import org.jmolecules.architecture.cqrs.Command;
 import org.jmolecules.architecture.cqrs.CommandHandler;
 import org.jmolecules.architecture.cqrs.QueryModel;
+import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
 import org.jmolecules.archunit.JMoleculesArchitectureRules;
 import org.jmolecules.archunit.JMoleculesDddRules;
 import org.jmolecules.ddd.annotation.AggregateRoot;
+import org.jmolecules.ddd.annotation.Entity;
 import org.jmolecules.ddd.annotation.Repository;
 import org.jmolecules.ddd.annotation.ValueObject;
+import org.jmolecules.event.annotation.DomainEvent;
 import org.junit.jupiter.api.Test;
 
 class JMoleculesArchitectureTest {
+
+    private static final String[] API_DTO_PACKAGE_PATTERNS = {"api.model", "generated"};
+
+    private static final Set<Class<? extends Annotation>> DDD_BUILDING_BLOCK_ANNOTATIONS =
+            Set.of(AggregateRoot.class, Entity.class, ValueObject.class, DomainEvent.class);
 
     private final com.tngtech.archunit.core.domain.JavaClasses classes =
             new ClassFileImporter().importPackages("com.example.demo");
@@ -231,37 +243,125 @@ class JMoleculesArchitectureTest {
     }
 
     /**
-     * 規則 #6：@Command 必須放在 *.application.command 套件
+     * 規則 #6：@Command 必須位於 @ApplicationServiceRing 標記的 package
      *
-     * <p>Command 是應用層的輸入物件，放在 application.command 套件讓團隊清楚知道從哪裡找操作意圖定義。
+     * <p>Command 是應用層的輸入物件。規則以 package-info 的 @ApplicationServiceRing 為準，不綁定固定資料夾名稱。
      *
-     * <p>預期失敗（violation demo）：BadCommand — 違規 #6（Command 放在 context root，非 application.command）
+     * <p>預期失敗（violation demo）：BadCommand — 違規 #6（Command 放在未標記 @ApplicationServiceRing 的 context
+     * root）
      */
     @Test
-    void commandsShouldResideInCommandPackage() {
+    void commandsShouldResideInApplicationServiceRing() {
         classes()
                 .that()
                 .areAnnotatedWith(Command.class)
-                .should()
-                .resideInAPackage("..application.command..")
+                .should(resideInPackageAnnotatedWith(ApplicationServiceRing.class))
                 .check(classes);
     }
 
     /**
-     * 規則 #7：@CommandHandler 方法只能在 application 層
+     * 規則 #7：@CommandHandler 方法只能在 @ApplicationServiceRing 標記的 package
      *
-     * <p>CommandHandler 協調 repository 與 domain event，屬應用層職責；出現在 domain 層或 context root 代表層 級邊界被打破。
+     * <p>CommandHandler 協調 repository 與 domain event，屬應用層職責；出現在未標記 @ApplicationServiceRing 的
+     * package 代表層級邊界被打破。
      *
-     * <p>預期失敗（violation demo）：BadDomainHandler — 違規 #7（CommandHandler 在 domain 層外的 ordering root）
+     * <p>預期失敗（violation demo）：BadDomainHandler — 違規 #7（CommandHandler 在未標記 @ApplicationServiceRing
+     * 的 ordering root）
      */
     @Test
     void commandHandlersShouldBeInApplicationLayer() {
+        ArchCondition<JavaMethod> beDeclaredInApplicationServiceRing =
+                new ArchCondition<>(
+                        "be declared in a package annotated with @ApplicationServiceRing") {
+                    @Override
+                    public void check(JavaMethod method, ConditionEvents events) {
+                        JavaClass owner = method.getOwner();
+                        if (!owner.getPackage().isAnnotatedWith(ApplicationServiceRing.class)) {
+                            events.add(
+                                    SimpleConditionEvent.violated(
+                                            method,
+                                            String.format(
+                                                    "@CommandHandler %s.%s is declared in package %s"
+                                                            + " which is not annotated with @ApplicationServiceRing",
+                                                    owner.getSimpleName(),
+                                                    method.getName(),
+                                                    owner.getPackageName())));
+                        }
+                    }
+                };
+
         methods()
                 .that()
                 .areAnnotatedWith(CommandHandler.class)
-                .should()
-                .beDeclaredInClassesThat()
-                .resideInAPackage("..application..")
+                .should(beDeclaredInApplicationServiceRing)
                 .check(classes);
+    }
+
+    /**
+     * 規則 #8：DDD building block 不依賴 API DTO / generated model
+     *
+     * <p>Domain model 應表達領域語言，不依賴 transport contract。API DTO package 名稱集中在
+     * API_DTO_PACKAGE_PATTERNS，未來若 generated package 改名，只需調整該設定。
+     */
+    @Test
+    void dddBuildingBlocksShouldNotDependOnApiDtos() {
+        ArchCondition<JavaClass> notDependOnApiDtos =
+                new ArchCondition<>("not depend on API DTO or generated model packages") {
+                    @Override
+                    public void check(JavaClass javaClass, ConditionEvents events) {
+                        if (!isDddBuildingBlock(javaClass)) {
+                            return;
+                        }
+
+                        javaClass.getDirectDependenciesFromSelf().stream()
+                                .filter(
+                                        dependency ->
+                                                isApiDtoPackage(
+                                                        dependency
+                                                                .getTargetClass()
+                                                                .getPackageName()))
+                                .forEach(
+                                        dependency ->
+                                                events.add(
+                                                        SimpleConditionEvent.violated(
+                                                                javaClass,
+                                                                String.format(
+                                                                        "DDD building block %s depends on API DTO/generated type %s",
+                                                                        javaClass.getSimpleName(),
+                                                                        dependency
+                                                                                .getTargetClass()
+                                                                                .getName()))));
+                    }
+                };
+
+        classes().should(notDependOnApiDtos).check(classes);
+    }
+
+    private static ArchCondition<JavaClass> resideInPackageAnnotatedWith(
+            Class<? extends Annotation> annotation) {
+        return new ArchCondition<>(
+                "reside in a package annotated with @" + annotation.getSimpleName()) {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                if (!javaClass.getPackage().isAnnotatedWith(annotation)) {
+                    events.add(
+                            SimpleConditionEvent.violated(
+                                    javaClass,
+                                    String.format(
+                                            "%s resides in package %s which is not annotated with @%s",
+                                            javaClass.getSimpleName(),
+                                            javaClass.getPackageName(),
+                                            annotation.getSimpleName())));
+                }
+            }
+        };
+    }
+
+    private static boolean isDddBuildingBlock(JavaClass javaClass) {
+        return DDD_BUILDING_BLOCK_ANNOTATIONS.stream().anyMatch(javaClass::isAnnotatedWith);
+    }
+
+    private static boolean isApiDtoPackage(String packageName) {
+        return Arrays.stream(API_DTO_PACKAGE_PATTERNS).anyMatch(packageName::contains);
     }
 }

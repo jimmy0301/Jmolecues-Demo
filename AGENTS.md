@@ -65,7 +65,7 @@ com.example.demo
 - 命名必須使用所在 Bounded Context 的 ubiquitous language；Command 祈使句、Event 過去式、Query / Projection 讀取語意，避免模糊 `Manager` / `Processor` / `Data`
 - ValueObject / Command 必須不可變（record 或 final fields）
 - API request / response DTO、OpenAPI generated model、Spring MVC interface 只屬於 `infrastructure.web`；進入 application 前必須轉成 Command、Query 參數或 application result，禁止在 domain / domainservice / application 層使用
-- @Command 放在 `application.command` 套件；@CommandHandler 只在 `application` 層
+- @Command 必須位於標記 `@ApplicationServiceRing` 的 package；@CommandHandler 只在 `@ApplicationServiceRing` package
 - @Command 是 use case input，不是 API DTO；@CommandHandler 不應為了 Controller 方便而直接暴露 Aggregate 當 response
 - @QueryModel 不可呼叫 @CommandHandler、不可 save/delete/publish event（read side 不觸發 state change）；projection 可 eventual consistent，但必須可重建且可冪等處理事件
 - 驗證需分層：transport validation 在 Controller/API DTO，use case validation 在 Application，business invariant 在 Domain

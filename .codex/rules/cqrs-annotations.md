@@ -1,8 +1,8 @@
 # CQRS Rules
 
-- `@Command` 只能放在 `*.application.command` 套件，必須不可變。
+- `@Command` 必須位於標記 `@ApplicationServiceRing` 的 package，必須不可變；package 名稱是 convention，不是唯一判斷依據。
 - Command 是 application use case input，不是 HTTP request DTO 或 OpenAPI generated model。
-- `@CommandHandler` 只在 application 層，負責載入 Aggregate、呼叫業務方法、儲存結果。
+- `@CommandHandler` 只在標記 `@ApplicationServiceRing` 的 package，負責載入 Aggregate、呼叫業務方法、儲存結果。
 - 業務規則放在 Aggregate / Entity / Domain Service，不放在 Command Handler。
 - 一個 `@CommandHandler` 原則上只修改一個 Aggregate。
 - 對外部可能重送的 Command，必須定義冪等策略或重送語意。

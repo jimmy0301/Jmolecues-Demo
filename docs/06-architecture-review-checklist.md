@@ -22,8 +22,8 @@
 
 ## CQRS
 
-- Command 位於 `application.command`，命名是祈使語意
-- Command Handler 位於 application 層，只協調載入、呼叫 domain method、儲存
+- Command 位於標記 `@ApplicationServiceRing` 的 package，命名是祈使語意
+- Command Handler 位於標記 `@ApplicationServiceRing` 的 package，只協調載入、呼叫 domain method、儲存
 - QueryModel 只讀，不呼叫 command handler、不 save/delete、不 publish event
 - API DTO 在 controller 轉成 Command / Query 參數，不進 application / domain
 - Validation 分層清楚：transport、use case、domain invariant 各在自己的位置
@@ -51,3 +51,4 @@
 - 新增架構決策時補 `decisions/` 或 `docs/adr/`
 - 新增跨專案可重用模式時補 `patterns/`
 - 跑過 `mvn spotless:apply` 與必要 focused tests
+- package rename 時同步檢查 package-info annotation，而不是只改資料夾名稱

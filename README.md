@@ -91,7 +91,7 @@ mvn test -Dtest=ModularityTest
 
 | 測試 | 結果 | 說明 |
 |---|---|---|
-| `JMoleculesArchitectureTest`（8 tests） | 7 失敗 / 1 通過 | 7 個因 violation demo 刻意失敗；`shouldFollowOnionArchitecture` 通過 |
+| `JMoleculesArchitectureTest`（9 tests） | 7 失敗 / 2 通過 | 7 個因 violation demo 刻意失敗；`shouldFollowOnionArchitecture` 與 DTO 邊界規則通過 |
 | `ModularityTest#verifiesModularStructure` | 失敗 | `BadOrder` 持有跨 Context 的 `Customer` 物件；`BadCommand` 直接 import `customer.domain.CustomerId`（violation demo #1、#4） |
 | `ModularityTest#documentModules` | 通過 | 產生模組文件到 `target/spring-modulith-docs/` |
 
@@ -100,4 +100,5 @@ mvn test -Dtest=ModularityTest
 ## 延伸閱讀
 
 - [`docs/adr/001-use-jmolecules.md`](docs/adr/001-use-jmolecules.md) — 為何選擇 jMolecules 的架構決策記錄
+- [`decisions/2026-05-31-annotation-first-architecture-tests.md`](decisions/2026-05-31-annotation-first-architecture-tests.md) — 架構測試以 annotation / package metadata 為主
 - [`patterns/`](patterns/) — 跨專案可重用的技術模式
