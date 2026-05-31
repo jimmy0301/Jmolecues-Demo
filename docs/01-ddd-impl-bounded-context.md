@@ -1,6 +1,6 @@
 # Bounded Context 與跨 Context 實作
 
-本文件對應 [DDD 核心概念](01-ddd.md) 的 Bounded Context、Shared Kernel 與跨 Context 資料存取模式。
+本文件對應 [Bounded Context 與整合邊界](01-ddd-context-integration.md) 的 Bounded Context、Shared Kernel 與跨 Context 資料存取模式。
 
 閱讀這份文件時，先記住一個原則：
 

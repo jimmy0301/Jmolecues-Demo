@@ -71,6 +71,7 @@ com.example.demo
 - 驗證需分層：transport validation 在 Controller/API DTO，use case validation 在 Application，business invariant 在 Domain
 - 每次新增 class 後執行 `mvn spotless:apply` 再跑 ArchUnit test
 - Controller 新增時補對應 `@WebMvcTest` API 測試，放在相同 package（`infrastructure.web`）
+- 新增架構決策時補 `decisions/`；新增跨專案可重用技術模式時補 `patterns/`
 
 ## 完成操作後的自動行為
 

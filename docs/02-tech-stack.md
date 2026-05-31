@@ -37,7 +37,7 @@
 **問題**：DDD
 概念（AggregateRoot、ValueObject 等）通常只存在文件和開發者腦中，程式碼本身無法表達。
 
-**解法**：jMolecules 提供一組 annotation，讓你直接在 class 上標記它的 DDD 角色：
+**解法**：jMolecules 提供一組 annotation，可直接在 class 上標記它的 DDD 角色：
 
 ```java
 @AggregateRoot                         // 這個 class 是 AggregateRoot

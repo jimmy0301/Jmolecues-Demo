@@ -6,8 +6,8 @@
 
 ## 什麼是 Skill？
 
-Skill 是放在 `.agents/skills/<name>/SKILL.md` 的提示模板，在 Agent 的對話框輸入 `/<skill-name>` 即可執行。
-每個 Skill 包含固定步驟、程式碼模板、以及完成後的驗證指令，讓 Agent 不需要重新推導每次操作應該怎麼做。
+Skill 是放在 `.agents/skills/<name>/SKILL.md` 的提示模板，在支援技能指令的工具介面輸入 `/<skill-name>` 即可執行。
+每個 Skill 包含固定步驟、程式碼模板、以及完成後的驗證指令，避免每次操作重新推導相同規則。
 
 **執行方式：**
 
