@@ -19,13 +19,13 @@
 ### 1. 軟體設計概念
 
 1. [Domain-Driven Design 核心概念](docs/01-ddd.md)  
-   — Building Blocks、Bounded Context、Shared Kernel、跨 Context 資料存取模式
+   — Building Blocks、Bounded Context、Shared Kernel、跨 Context 資料存取模式、API DTO 邊界
 
 2. [Onion Architecture — 洋蔥分層](docs/04-onion.md)  
-   — 四個 Ring 的職責、依賴方向、Domain / Application / Infrastructure 的邊界
+   — 四個 Ring 的職責、依賴方向、Domain / Application / Infrastructure / Adapter DTO 的邊界
 
 3. [CQRS — 命令與查詢分離](docs/03-cqrs.md)  
-   — Command vs Query、寫入流程、讀取模型、事件如何銜接
+   — Command vs Query、寫入流程、讀取模型、事件如何銜接、Command 與 API DTO 分離
 
 ### 2. 實作範例說明
 

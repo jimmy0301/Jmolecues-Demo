@@ -52,14 +52,16 @@ com.example.demo
     └── BadQueryModel        ⚠️ violation demo
 ```
 
-## 核心規則（詳見 .Codex/rules/）
+## 核心規則（詳見 .codex/rules/）
 - 每個 building block 加對應 jMolecules annotation（不可省略）
 - 跨 Context 用 Reference Object（`@ValueObject record XxxReference(UUID id)`），不 import 對方型別、不持有 Aggregate 物件
 - 跨 Context 讀取 / 更新資料只透過 owner Context 的公開契約（Query Facade、Command Facade、Event、Read Model、Snapshot），不直接使用對方 Repository 或資料庫
 - Repository 只為 AggregateRoot 建立
 - ValueObject / Command 必須不可變（record 或 final fields）
+- API request / response DTO、OpenAPI generated model、Spring MVC interface 只屬於 `infrastructure.web`；進入 application 前必須轉成 Command、Query 參數或 application result，禁止在 domain / domainservice / application 層使用
 - @Command 放在 `application.command` 套件；@CommandHandler 只在 `application` 層
-- @QueryModel 不可呼叫 @CommandHandler（read side 不觸發 state change）
+- @Command 是 use case input，不是 API DTO；@CommandHandler 不應為了 Controller 方便而直接暴露 Aggregate 當 response
+- @QueryModel 不可呼叫 @CommandHandler、不可 save/delete/publish event（read side 不觸發 state change）
 - 每次新增 class 後執行 `mvn spotless:apply` 再跑 ArchUnit test
 - Controller 新增時補對應 `@WebMvcTest` API 測試，放在相同 package（`infrastructure.web`）
 
@@ -68,8 +70,8 @@ com.example.demo
 每次新增、修改或刪除 class、package 結構、架構規則後，自動檢查並同步以下文件（有變動才修改）：
 - `AGENTS.md` — Bounded Context 結構圖、核心規則
 - `docs/` — 相關章節的程式碼範例、表格、結構說明
-- `.Codex/rules/` — 對應的 rule 檔範例與規則描述
-- `.Codex/skills/` — 對應的 skill 模板
+- `.codex/rules/` — 對應的 rule 檔範例與規則描述
+- `.agents/skills/` — 對應的 skill 模板
 
 ## Conventional Commits
 
@@ -111,10 +113,10 @@ mvn test -pl .              # 跑所有測試（含 ArchUnit + Modulith）
 mvn test -Dtest=JMoleculesArchitectureTest  # 只跑 ArchUnit
 ```
 
-@.Codex/rules/ddd-annotations.md
-@.Codex/rules/onion-architecture.md
-@.Codex/rules/bounded-context.md
-@.Codex/rules/cqrs-annotations.md
-@.Codex/rules/testing.md
+@.codex/rules/ddd-annotations.md
+@.codex/rules/onion-architecture.md
+@.codex/rules/bounded-context.md
+@.codex/rules/cqrs-annotations.md
+@.codex/rules/testing.md
 
 @/Users/keyulun/Documents/claude knowledge base/software-dev-kb/AGENTS.md

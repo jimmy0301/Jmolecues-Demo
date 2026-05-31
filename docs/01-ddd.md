@@ -205,6 +205,37 @@ Snapshot 不是壞味道；它是在本 Context 保存業務事實。判斷問�
 避免使用 owner 的 Aggregate、Entity、domain enum、ValueObject、Repository、Application Service、QueryModel 等 internal type。
 簡單判斷：**如果 DTO 欄位型別需要 import 某個模組的 sub-package，通常就是洩漏。**
 
+#### API DTO 與領域模型邊界
+
+REST API request / response DTO、OpenAPI generated model、Spring MVC interface 都屬於 `infrastructure.web` adapter。
+它們描述的是傳輸協議，不是領域語言，因此不能出現在 `domain`、`domainservice` 或 `application` 層。
+
+Controller 的責任是做邊界轉換：
+
+```java
+// ✅ 正確：在 web adapter 轉成 application command
+CreateOrderCommand command = new CreateOrderCommand(
+        new CustomerReference(request.customerId()));
+```
+
+不要讓 API DTO 穿進 use case 或 Aggregate：
+
+```java
+// ❌ application service 不接收 HTTP request DTO
+orderService.handle(CreateOrderRequest request);
+
+// ❌ domain model 不持有 API response DTO
+private OrderResponse response;
+```
+
+判斷方式：
+
+- `infrastructure.web` 可以 import API DTO、OpenAPI generated model、application command / query object
+- `application` 可以 import domain model、domain service、repository interface，但不可 import web / generated DTO
+- `domain` 只使用本 Context 的領域型別、Shared Kernel、Java 標準型別，不知道 HTTP、JSON、OpenAPI
+- API DTO 進入 application 前必須轉成 Command、Query 參數或 application result
+- Aggregate / Entity / ValueObject 不接收、不回傳、不保存 API DTO
+
 #### 常見反模式
 
 - 直接 import 另一個 Context 的 `domain` / `application` / `repository` package
@@ -212,6 +243,8 @@ Snapshot 不是壞味道；它是在本 Context 保存業務事實。判斷問�
 - 直接修改另一個 Context 的資料庫
 - 公開 DTO 洩漏 owner 的 domain type
 - 把內部實作細節包成公開合約，而不是設計穩定的跨 Context API
+- API request / response DTO 穿透到 application 或 domain 層
+- 直接把 OpenAPI generated model 標成 `@Command`、`@ValueObject` 或 `@DomainEvent`
 
 → 本專案的 Bounded Context 與跨 Context 實作見 [Bounded Context 與跨 Context 實作](01-ddd-impl-bounded-context.md)
 

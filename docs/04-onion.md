@@ -67,6 +67,36 @@ public class Order extends AbstractAggregateRoot<Order> {
 }
 ```
 
+### Adapter DTO 邊界
+
+`infrastructure.web` 是 HTTP / OpenAPI adapter。API DTO、OpenAPI generated interface、Spring MVC annotation、JSON serialization concern 都只能留在這一層。
+內層只能看見業務語言，不看見傳輸協議。
+
+| Ring | 可以依賴 | 不可依賴 |
+|---|---|---|
+| Domain Model | 本 Context domain type、Shared Kernel、Java 標準型別 | Spring Web、OpenAPI generated DTO、Controller、Application Service、Repository implementation |
+| Domain Service | Domain Model | Web/API DTO、Repository、外部 API client、Spring MVC |
+| Application Service | Domain Model、Domain Service、Repository interface、Command / result type | Controller、HTTP status、OpenAPI generated DTO、infrastructure implementation |
+| Infrastructure | Application Service、QueryModel、public API、domain ID/reference | 直接修改 Aggregate 內部狀態、繞過 use case 操作資料庫 |
+
+常見錯誤：
+
+```java
+// ❌ application layer 依賴 web adapter DTO
+public Order handle(CreateOrderRequest request) { ... }
+
+// ❌ domain layer 依賴 transport contract
+public void place(PlaceOrderApiModel apiModel) { ... }
+```
+
+正確做法是在 Controller 或 mapper 做轉換：
+
+```java
+// ✅ web adapter 將 transport contract 轉成 application command
+var command = new PlaceOrderCommand(new OrderId(request.orderId()));
+orderService.handle(command);
+```
+
 ---
 
 → 本專案的分層實作見 [Onion Architecture 實作說明](04-onion-impl.md)

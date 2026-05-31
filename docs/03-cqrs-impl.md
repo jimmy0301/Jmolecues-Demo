@@ -49,6 +49,7 @@ ordering/
 ## @Command
 
 Command 必須**不可變**，且只能放在 `*.application.command` 套件。
+Command 表達 use case 意圖，不是 HTTP request DTO；即使欄位和 API payload 一樣，也要由 Controller 明確轉換。
 
 ```java
 // ✅ 正確：record 天生不可變，位於 application.command
@@ -98,7 +99,7 @@ public class OrderService {
 
 ## @QueryModel
 
-不可呼叫任何 `@CommandHandler` 方法。
+不可呼叫任何 `@CommandHandler` 方法，也不可透過 `save()`、`delete()`、domain event 或 Aggregate mutating method 造成狀態改變。
 
 ```java
 // ✅ 正確：只讀
@@ -151,6 +152,7 @@ class OrderServiceTest {
 ## Controller API 測試
 
 Controller 用 `@WebMvcTest` 做 HTTP slice 測試，只載入 web 層，不啟動 MongoDB。Application Service 與 QueryModel 以 `@MockBean` 替換：
+Controller 同時是 API DTO 和 application model 的轉換邊界；測試應驗證 request DTO 會被轉成正確 Command，response 不直接洩漏 Aggregate 內部細節。
 
 ```java
 @WebMvcTest(OrderController.class)

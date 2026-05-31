@@ -26,9 +26,9 @@ Application Service 是「**做什麼（Use Case）**」，Domain Service 是「
 | **角色** | 指揮官、協調者 | 專家、業務計算者 |
 | **Ring** | `application/` `@ApplicationServiceRing` | `domainservice/` `@DomainServiceRing` |
 | **層級** | 應用層（外層） | 領域層（內層） |
-| **職責** | 流程控制：DTO→Domain、載入 Aggregate、調用業務邏輯、事務提交、發布 Event | 業務規則：處理跨 Entity/Aggregate 的領域邏輯 |
-| **輸入** | ID 或 DTO（從外部傳入，Repository 負責載入） | Domain 物件（Aggregate、ValueObject） |
-| **輸出** | 更新後的 Aggregate 或 void | 計算結果（ValueObject 或 primitive） |
+| **職責** | 流程控制：Command/Application input → Domain、載入 Aggregate、調用業務邏輯、事務提交、發布 Event | 業務規則：處理跨 Entity/Aggregate 的領域邏輯 |
+| **輸入** | ID、`@Command` 或 application input（API DTO 必須先在 `infrastructure.web` 轉換） | Domain 物件（Aggregate、ValueObject） |
+| **輸出** | void、ID、application result，或必要時回傳 Aggregate（不直接當 API response） | 計算結果（ValueObject 或 primitive） |
 | **依賴** | 可依賴 Repository、ApplicationEventPublisher、Domain Service | 只依賴 domain layer，不碰 Repository、不發 Event |
 | **annotation** | `@Service`（Spring `org.springframework.stereotype.Service`） | `@Service`（jMolecules `org.jmolecules.ddd.annotation.Service`） |
 | **典型例子** | `OrderService`、`RegisterUserService` | `PricingService`、`TransferService`、`DiscountPolicy` |
@@ -166,6 +166,8 @@ public class <ServiceName> {
 **Application Service 的規則：**
 - 每個方法對應一個 Use Case，不要把多個 Use Case 混在一起
 - 不包含 if/else 業務判斷（業務邏輯在 Aggregate 或 Domain Service 裡）
+- 不接收 API request / response DTO、OpenAPI generated model 或 Spring MVC interface
+- Command 是 use case input，不是 transport DTO；Controller 負責 DTO 與 Command / result 的轉換
 - 流程固定：載入 → 委派給 Aggregate → 儲存 → 發布 Event
 
 ---

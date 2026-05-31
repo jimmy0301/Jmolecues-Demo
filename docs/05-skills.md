@@ -191,6 +191,7 @@ EventListener.on(event)      →   @ApplicationModuleListener（async、交易�
 | Ring | `@DomainServiceRing` | `@ApplicationServiceRing` |
 | Annotation | `@Service`（jMolecules） | `@Service`（Spring） |
 | 可依賴 | Domain 物件 | Repository、Domain Service |
+| 輸入邊界 | Domain 物件 | `@Command` / application input；API DTO 必須先在 `infrastructure.web` 轉換 |
 | 典型例子 | `PricingService`、`DiscountPolicy` | `OrderService`、`CustomerService` |
 
 **完成後：** 自動補對應單元測試（Domain Service 不 mock；Application Service mock Repository，event 驗證透過 `getRegisteredEvents()` 檢查 aggregate）。

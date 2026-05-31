@@ -191,5 +191,6 @@ ordering.domain.Order.place()
 - 不 import 對方的 `domain`、`application`、`repository` package
 - 只透過 `publicapi`、事件或本地 Reference Object 互動
 - Public DTO 不回傳 Aggregate、Entity、Repository、internal Value Object
+- Public DTO 不重用 HTTP request / response DTO 或 OpenAPI generated model
 - 歷史資料需要穩定呈現時，在本 Context 保存 snapshot
 - 新增公開合約後，補測試並跑架構驗證

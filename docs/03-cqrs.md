@@ -47,6 +47,7 @@ CQRS 讓這個問題消失：**看到 Command 就知道有 side effect，看到 
 - 必須不可變——代表某一時刻確定的意圖，不應被修改後重送
 - 通常不回傳業務資料（或只回傳 ID / 執行狀態）
 - 一個 Command 對應一個明確的業務操作
+- Command 是 application 層的 use case input，不是 HTTP request DTO，也不是 OpenAPI generated model
 
 ### Query — 讀取請求
 
@@ -55,6 +56,7 @@ CQRS 讓這個問題消失：**看到 Command 就知道有 side effect，看到 
 - 不改變任何狀態
 - 可以安全重複呼叫，結果相同
 - 可以針對讀取需求獨立優化（快取、索引、read model）
+- Query path 不 dispatch command、不 publish domain event、不呼叫會修改 Aggregate 狀態的方法
 
 ### Command Handler — 執行者
 
@@ -65,6 +67,41 @@ CQRS 讓這個問題消失：**看到 Command 就知道有 side effect，看到 
 3. 儲存並發布 Domain Event
 
 Handler 本身不含業務邏輯，業務邏輯在 Aggregate 裡。
+
+### DTO 邊界 — CQRS 與 Web Adapter 分工
+
+CQRS 的 Command / QueryModel 屬於 application 層；API request / response DTO 屬於 `infrastructure.web`。
+兩者命名和欄位可能相似，但職責不同，不能混用。
+
+| 物件 | 所在層 | 可以做什麼 | 不該做什麼 |
+|---|---|---|---|
+| API request DTO | infrastructure/web | 表達 HTTP payload | 被 application service 或 domain model 接收 |
+| Command | application/command | 表達 use case 意圖 | 直接拿來當 JSON response 或 OpenAPI model |
+| QueryModel | application | 組裝 read side 資料 | 呼叫 CommandHandler、save/delete、publish event |
+| API response DTO | infrastructure/web | 表達 HTTP response contract | 洩漏 Aggregate、Entity、Domain Event internal state |
+
+Controller 是轉換邊界：
+
+```java
+// ✅ HTTP payload -> Application Command
+@PostMapping("/orders")
+ResponseEntity<OrderResponse> create(@RequestBody CreateOrderRequest request) {
+    OrderId id = orderService.handle(
+            new CreateOrderCommand(new CustomerReference(request.customerId())));
+    return ResponseEntity.created(...).body(OrderResponse.from(id));
+}
+```
+
+不要把 transport DTO 當成 use case input：
+
+```java
+// ❌ OpenAPI / REST DTO 不進 application
+@CommandHandler
+public Order handle(CreateOrderRequest request) { ... }
+```
+
+Command Handler 的回傳值也要克制。Production code 優先回傳 `void`、ID、簡單 result 或 application result DTO；
+不要為了讓 Controller 方便序列化，就直接把 Aggregate 當 API response 暴露出去。
 
 ---
 
