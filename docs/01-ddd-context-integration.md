@@ -134,6 +134,30 @@ Anti-Corruption Layer 是外部模型進入本 Context 前的轉譯層。
 避免使用 owner 的 Aggregate、Entity、domain enum、ValueObject、Repository、Application Service、QueryModel 等 internal type。
 簡單判斷：**如果 DTO 欄位型別需要 import 某個模組的 sub-package，通常就是洩漏。**
 
+## Backward Compatibility — 公開合約相容性
+
+跨 Context public API、Integration Event、public DTO 和 read model 都是合約。
+合約變更預設採用向後相容策略，避免 producer / consumer 必須同時部署。
+
+規則：
+
+- 新增欄位優先設計為 optional，並提供預設行為
+- 不直接移除欄位、不改欄位語意、不改 enum 值含義
+- 需要移除欄位時，先標記 deprecated，等待所有 consumer 升級後再移除
+- Integration Event 需要 event id、correlation id，並保留 schema version 或明確相容策略
+- Consumer 必須能忽略未知欄位
+- Producer 不要求所有 consumer 在同一個 release 同步升級
+
+資料或合約變更採用 expand and contract：
+
+1. 先新增新欄位 / 新 index / 新 event 欄位，舊流程仍可用
+2. 執行可重跑的 backfill
+3. 過渡期支援 dual read / dual write
+4. 切換讀取路徑或啟用新功能
+5. 確認 consumer 升級後，再移除舊欄位或舊行為
+
+詳細 pattern 見 [Feature Toggle, Migration, and Backward Compatibility](../patterns/feature-toggle-migration-compatibility.md)。
+
 ## API DTO 與領域模型邊界
 
 REST API request / response DTO、OpenAPI generated model、Spring MVC interface 都屬於 `infrastructure.web` adapter。
@@ -184,6 +208,8 @@ Shared Kernel 是 Bounded Context 規則的例外：
 - 使用外部系統詞彙或 API 欄位名污染本 Context 的 ubiquitous language
 - 公開 DTO 洩漏 owner 的 domain type
 - 把內部實作細節包成公開合約，而不是設計穩定的跨 Context API
+- 在沒有 deprecation / migration 流程下移除 public DTO 或 Integration Event 欄位
+- 改變 enum 值語意，導致舊 consumer 用舊邏輯解讀新資料
 - API request / response DTO 穿透到 application 或 domain 層
 - 直接把 OpenAPI generated model 標成 `@Command`、`@ValueObject` 或 `@DomainEvent`
 

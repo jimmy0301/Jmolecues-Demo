@@ -12,3 +12,6 @@
 - Projection 測試要覆蓋重建與重複事件處理。
 - 並發規則要有測試：同一 Aggregate 的 concurrent command、version conflict 或重送行為至少覆蓋一種。
 - Process Manager / Saga 測試要覆蓋 happy path、重試、補償與重複事件。
+- Public contract 變更要有 backward compatibility 測試或 consumer 相容性檢查。
+- Migration / backfill 要驗證可重跑、可 rollback，且不繞過 Aggregate invariant。
+- Flamingock Change 要測 `@Apply` / `@Rollback`，資料庫 migration 優先用 Testcontainers MongoDB 驗證。

@@ -25,7 +25,7 @@
    — Building Blocks、Aggregate invariant、Bounded Context、Shared Kernel、Ubiquitous Language
 
 2. [Bounded Context 與整合邊界](docs/01-ddd-context-integration.md)
-   — 跨 Context 資料擁有權、Reference Object、Snapshot、Anti-Corruption Layer、API DTO 邊界
+   — 跨 Context 資料擁有權、Reference Object、Snapshot、Anti-Corruption Layer、API DTO 邊界、Backward Compatibility
 
 3. [一致性、並發與流程協調](docs/01-ddd-consistency-workflows.md)
    — 交易邊界、Domain Event vs Integration Event、Listener 冪等性、樂觀鎖 / 悲觀鎖、Process Manager / Saga
@@ -59,7 +59,7 @@
 ### 3. 技術棧與日常開發工具
 
 9. [技術棧說明](docs/02-tech-stack.md)
-   — Spring Boot、MongoDB、jMolecules、Spring Modulith、ArchUnit、OpenAPI Generator、WireMock、Spotless
+   — Spring Boot、MongoDB、Flamingock、jMolecules、Spring Modulith、ArchUnit、OpenAPI Generator、WireMock、Spotless
 
 10. [Agent Skills 說明](docs/05-skills.md)
    — 如何新增 Bounded Context、Aggregate、Entity、Repository、Domain Event、Service，並執行架構驗證

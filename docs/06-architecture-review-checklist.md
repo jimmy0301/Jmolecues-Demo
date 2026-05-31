@@ -45,11 +45,24 @@
 - 悲觀鎖只作例外策略，文件寫明 lock scope、timeout、deadlock handling 與測試
 - MongoDB 若需悲觀鎖語意，使用 lease lock，不宣稱有 SQL row lock
 
+## Compatibility and Migration
+
+- Public API / Integration Event / public DTO 只做 additive change，或有 deprecation 流程
+- 新欄位有預設值、backfill 或兼容讀取邏輯
+- 資料變更採用 expand and contract，不要求所有服務同時部署
+- Feature toggle 有 owner、預設值、移除條件與關閉時的舊流程
+- Migration / backfill 可重跑，且不繞過 Aggregate invariant
+- Data migration 使用 Flamingock Change；已部署 Change 沒有被修改
+- Flamingock Change 有 rollback 或明確補償策略，且大量資料 migration 有 batching / observability
+- Rollback 策略已描述：關閉 toggle、回復讀取路徑、停止 consumer 或保留 dual write
+
 ## Tests and Docs
 
 - 新增 controller 時有同 package `@WebMvcTest`
 - 新增 rule / pattern 時同步 `.codex/rules/`、`docs/`、`patterns/`
 - 新增架構決策時補 `decisions/` 或 `docs/adr/`
 - 新增跨專案可重用模式時補 `patterns/`
+- Public contract 或 migration 策略變更時補相容性測試或 migration 驗證計畫
+- Flamingock Change 補 `@Apply` / `@Rollback` 測試，必要時用 Testcontainers MongoDB 驗證
 - 跑過 `mvn spotless:apply` 與必要 focused tests
 - package rename 時同步檢查 package-info annotation，而不是只改資料夾名稱

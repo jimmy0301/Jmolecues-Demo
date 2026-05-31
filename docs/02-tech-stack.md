@@ -9,6 +9,7 @@
 | Web | Spring Boot Starter Web | — | REST 端點 |
 | API 規格 | OpenAPI Generator Maven Plugin | 7.12.0 | 從 YAML spec 產生 Spring server interface |
 | 資料庫 | Spring Data MongoDB | — | 持久化 |
+| Data Migration | Flamingock | 依導入時 BOM / plugin | application-level Change-as-Code、data migration、audit / rollback |
 | DDD Annotations | jMolecules DDD | BOM 2025.0.2 | 在程式碼中表達 DDD 角色 |
 | DDD Events | jMolecules Events | BOM 2025.0.2 | `@DomainEvent`、`@DomainEventHandler` |
 | 架構風格 | jMolecules Onion Architecture | BOM 2025.0.2 | Onion 分層 annotation |
@@ -133,6 +134,8 @@ void documentModules() {
 
 **為何用 MongoDB 而非關聯式資料庫？**  
 MongoDB 的 document 模型天然對應 Aggregate 邊界——整個 `Order`（含內嵌的 `OrderItem` list）儲存為一個 document，不需要 JOIN，符合「Aggregate 是一致性邊界」的概念。
+
+Data migration 標準工具使用 Flamingock，詳細規範見 [Flamingock Data Migration](02-tech-stack-flamingock.md)。
 
 ---
 

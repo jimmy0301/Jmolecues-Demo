@@ -11,6 +11,7 @@
 | Web | Spring Boot Starter Web | — |
 | API 規格 | OpenAPI Generator Maven Plugin | 7.12.0 |
 | 資料庫 | Spring Data MongoDB | — |
+| Data Migration | Flamingock | 依導入時 BOM / plugin |
 | DDD Annotations | jMolecules DDD | BOM 2025.0.2 |
 | DDD Events | jMolecules Events | BOM 2025.0.2 |
 | 架構風格 | jMolecules Onion Architecture（Classical） | BOM 2025.0.2 |
@@ -60,6 +61,9 @@ com.example.demo
 - Aggregate Root 必須保護 invariant；外部只能透過有業務語意的方法改變狀態，不暴露可修改集合或 setter 繞過規則
 - 一個 CommandHandler 原則上只修改一個 Aggregate；跨 Aggregate / 跨 Context 後續動作用 Domain Event、Process Manager 或 Saga
 - 跨 Context event 視為 Integration Event / public contract，欄位只用穩定型別，consumer 必須具備冪等性
+- Public API / Integration Event / public DTO 預設只做 additive change；breaking change 需有 deprecation、migration 與 rollback 計畫
+- Feature toggle 放在 application / infrastructure adapter，不放在 domain；toggle 需有 owner、預設值與移除條件
+- Data migration 使用 Flamingock Change；已部署 Change 不可修改，修正需新增下一個 Change，且必須有 rollback 或補償策略
 - 可被並發修改的 Aggregate 必須定義 optimistic locking / version conflict 策略；重送語意與並發策略需一致；悲觀鎖只能作為例外策略並需記錄鎖範圍、timeout、deadlock 處理與測試；MongoDB 若需悲觀鎖語意，用 lease lock 範例，不宣稱有 SQL row lock
 - Process Manager / Saga 只用於有狀態、多步驟、跨 Aggregate / Context / 外部系統流程，且需具備 correlation id、重試與補償策略
 - 命名必須使用所在 Bounded Context 的 ubiquitous language；Command 祈使句、Event 過去式、Query / Projection 讀取語意，避免模糊 `Manager` / `Processor` / `Data`
