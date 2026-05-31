@@ -9,4 +9,6 @@
 - Integration Event / public event 不包含 owner Context 的 internal domain type。
 - Integration Event / public event consumer 必須冪等，能處理重送、重試與順序不保證。
 - 外部系統或其他 Context 的模型必須透過 Anti-Corruption Layer 轉成本 Context 的語言。
+- Process Manager / Saga 只透過 owner Context 的公開合約推進流程，不直接修改其他 Context 的資料庫。
+- 跨 Context 流程必須有 correlation id / process id、重試策略與補償策略。
 - 歷史資料需要穩定呈現時，在本 Context 保存 snapshot。

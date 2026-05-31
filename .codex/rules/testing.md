@@ -10,3 +10,5 @@
 - Domain Model 測試要覆蓋 Aggregate invariant 和非法狀態轉換。
 - 若 Command 或 listener 宣告冪等，測試要覆蓋重送同一 command / event 的結果。
 - Projection 測試要覆蓋重建與重複事件處理。
+- 並發規則要有測試：同一 Aggregate 的 concurrent command、version conflict 或重送行為至少覆蓋一種。
+- Process Manager / Saga 測試要覆蓋 happy path、重試、補償與重複事件。

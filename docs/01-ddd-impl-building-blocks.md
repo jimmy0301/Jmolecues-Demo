@@ -82,6 +82,9 @@ public void place() {
 外部只能透過 `addItem()`、`place()`、`cancel()` 這類有業務語意的方法操作訂單。
 不要暴露可修改的 `items` list，也不要提供 `setStatus()` 讓外部繞過狀態機。
 
+`Order` 也用 Spring Data `@Version` 示範樂觀鎖。版本欄位屬於 persistence concurrency metadata，不參與領域決策；command handler 仍只操作 Aggregate 方法，由 repository 在 `save()` 時偵測 stale version。
+`OrderRepositoryIT#save_withStaleVersion_throwsOptimisticLockingFailure` 驗證兩份同一 Aggregate copy 先後儲存時，舊版本會收到 `OptimisticLockingFailureException`。
+
 ### Step 4：Domain Event — 狀態改變的記錄
 
 ```

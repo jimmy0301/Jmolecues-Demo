@@ -75,6 +75,7 @@ public class PlaceOrderCommand {
 只能在 application 層（`*.application.*`）。Handler 協調 Repository 與 Event，業務邏輯留在 Aggregate。
 每個 handler 原則上只修改一個 Aggregate；需要觸發其他 Aggregate 或 Context 時，依靠已登記的 Domain Event、Process Manager 或 Saga。
 Transport validation 在 Controller，業務 invariant 在 Aggregate，Handler 只做 use case validation 與協調。
+若兩個 command 同時修改同一個 Aggregate，預設使用 Aggregate 的 `@Version` 欄位做樂觀鎖偵測；handler 不應用額外查詢繞過 repository 的版本檢查。
 
 ```java
 @Service
@@ -166,6 +167,8 @@ class OrderServiceTest {
 ```
 
 測試檔案：[`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java)、[`ProductServiceTest`](../src/test/java/com/example/demo/catalog/application/ProductServiceTest.java)、[`CustomerServiceTest`](../src/test/java/com/example/demo/customer/application/CustomerServiceTest.java)
+
+並發版本測試：[`OrderTest`](../src/test/java/com/example/demo/ordering/domain/OrderTest.java) 驗證 `Order` 有 `@Version` 欄位；[`OrderRepositoryIT`](../src/test/java/com/example/demo/ordering/domain/OrderRepositoryIT.java) 驗證 stale version 儲存會丟出 `OptimisticLockingFailureException`。
 
 ## Controller API 測試
 

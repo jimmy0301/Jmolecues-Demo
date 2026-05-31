@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.demo.shared.Money;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.annotation.Version;
 
 class OrderTest {
 
@@ -106,5 +108,13 @@ class OrderTest {
         assertThatThrownBy(order::cancel)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already cancelled");
+    }
+
+    @Test
+    void order_hasVersionFieldForOptimisticLocking() {
+        assertThat(
+                        Arrays.stream(Order.class.getDeclaredFields())
+                                .anyMatch(field -> field.isAnnotationPresent(Version.class)))
+                .isTrue();
     }
 }

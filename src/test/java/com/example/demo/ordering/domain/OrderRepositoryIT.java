@@ -1,6 +1,7 @@
 package com.example.demo.ordering.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.demo.MongoIntegrationTest;
 import com.example.demo.shared.Money;
@@ -9,6 +10,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 class OrderRepositoryIT extends MongoIntegrationTest {
 
@@ -72,5 +74,20 @@ class OrderRepositoryIT extends MongoIntegrationTest {
         var found = orderRepository.findById(order.getId()).orElseThrow();
 
         assertThat(found.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    @Test
+    void save_withStaleVersion_throwsOptimisticLockingFailure() {
+        var saved = orderRepository.save(new Order(UUID.randomUUID()));
+        var firstCopy = orderRepository.findById(saved.getId()).orElseThrow();
+        var staleCopy = orderRepository.findById(saved.getId()).orElseThrow();
+
+        firstCopy.place();
+        orderRepository.save(firstCopy);
+
+        staleCopy.cancel();
+
+        assertThatThrownBy(() -> orderRepository.save(staleCopy))
+                .isInstanceOf(OptimisticLockingFailureException.class);
     }
 }

@@ -42,7 +42,7 @@ ordering/
 
 | Class | Ring | 類型 | 說明 |
 |---|---|---|---|
-| `Order` | domain | AggregateRoot | 訂單主體，持有 `CustomerReference`（跨 Context 參照） |
+| `Order` | domain | AggregateRoot | 訂單主體，持有 `CustomerReference`（跨 Context 參照），以 `@Version` 示範樂觀鎖 |
 | `OrderId` | domain | ID / ValueObject | `@ValueObject record` implements `Identifier` |
 | `OrderItem` | domain | Entity | `implements Entity<Order, OrderItemId>`，含 `ProductReference` 與商品 snapshot |
 | `OrderItemId` | domain | ID / ValueObject | OrderItem 的 ID |
@@ -75,3 +75,4 @@ ordering/
 
 ## 注意
 `OrderItem` 不會出現在 Spring Modulith 文件，這是正確的行為（內部 Entity）。
+`Order.version` 是 repository 用來偵測 stale write 的 persistence metadata，不應作為領域規則或 API contract。

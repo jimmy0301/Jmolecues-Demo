@@ -104,6 +104,13 @@ Bounded Context 是一個業務子域的邊界，有自己的模型、語言與�
 外部系統或其他 Context 的詞彙進來時，要透過 public API、adapter 或 mapper 轉成本 Context 的語言；這層轉換就是 Anti-Corruption Layer（防腐層）。
 不要讓對方的欄位名稱、狀態 enum 或資料結構直接污染自己的 domain model。
 
+命名也要跟著 Bounded Context 的語言走：
+
+- 類別、方法、事件、Command、Query 都用業務詞彙，不用資料庫或 API payload 的欄位名硬套
+- 避免 `Manager`、`Processor`、`Data` 這類模糊名稱；若使用 `ProcessManager`，必須真的是長流程協調角色
+- 同一個詞跨 Context 意義不同時，各 Context 各自命名，例如 `Customer` 與 `CustomerReference`
+- 外部詞彙進入本 Context 前先轉譯，不直接把外部 enum / DTO 名稱帶進 domain
+
 ### Shared Kernel
 
 Shared Kernel 是多個 Context 協議共用的一小塊模型。
@@ -229,6 +236,38 @@ customer.addRewardPoints();
 若下單後需要扣庫存、發通知、更新點數，應用 `OrderPlaced` 事件讓各自 owner Context 自己處理。
 需要跨多步驟協調時，使用 Process Manager / Saga；若某步失敗，設計補償動作，而不是把所有資料鎖在同一個大交易裡。
 
+#### 樂觀鎖與並發
+
+Aggregate 是交易邊界，但仍可能同時收到多個 Command。
+例如兩個請求同時對同一張訂單執行 `place()` / `cancel()`，或使用者連點造成多次 `PlaceOrderCommand`。
+這時不能只靠 application service 的 if 判斷；持久化層也要能偵測並發衝突。
+
+規則：
+
+- 對可被並發修改的 Aggregate，加版本欄位或使用資料庫支援的 optimistic locking
+- 並發衝突不自動吞掉；Application Service 要回傳可理解的錯誤、要求重試，或重新載入後套用明確規則
+- Command 的冪等語意要和並發策略一致，例如「已成立再次 place 是成功」或「已成立再次 place 是固定錯誤」
+- 預設不用悲觀鎖或跨 Aggregate 大交易來掩蓋邊界問題；先檢查 Aggregate 邊界是否正確
+- 只有在高競爭、低延遲、單一資料庫交易可控，且重試 / 補償不適合時，才允許使用悲觀鎖
+- 使用悲觀鎖必須寫明原因、鎖範圍、timeout、deadlock 處理與測試案例
+- 並發行為要有測試，至少覆蓋同一 Aggregate 的重複 Command 或版本衝突處理
+
+#### Process Manager / Saga
+
+當一個業務流程需要跨多個 Aggregate、Context 或外部系統，且流程本身有狀態，就不要把邏輯塞進 event listener。
+這時使用 Process Manager / Saga。
+
+Process Manager / Saga 的責任是協調流程，不是擁有別人的資料：
+
+- 訂閱事件或接收 command，記錄流程狀態
+- 根據目前狀態發出下一個 command 或呼叫 owner Context 的公開合約
+- 處理 timeout、重試、失敗與補償
+- 保存 correlation id / process id，讓同一流程可追蹤、可重送、可恢復
+- 不直接修改其他 Context 的資料庫，不把多個 Aggregate 包進同一交易
+
+命名上，只有真的保存流程狀態並協調多步驟時，才使用 `*ProcessManager` 或 `*Saga`。
+單純聽到事件後做一件事的 class 仍是 listener，例如 `OrderPlacedListener`。
+
 #### Event Listener 規範
 
 Event listener 是事件消費者，不是 Aggregate invariant 的保護者。
@@ -305,6 +344,9 @@ private OrderResponse response;
 - 跨 Context 使用 Repository
 - 直接修改另一個 Context 的資料庫
 - 一個 Command Handler 在同一交易內修改多個 Aggregate 或多個 Context
+- 用 listener 承載有狀態長流程，卻沒有 Process Manager / Saga 的狀態、重試與補償設計
+- 忽略同一 Aggregate 的並發修改，沒有 optimistic locking、重試或明確錯誤策略
+- 使用外部系統詞彙或 API 欄位名污染本 Context 的 ubiquitous language
 - 公開 DTO 洩漏 owner 的 domain type
 - 把內部實作細節包成公開合約，而不是設計穩定的跨 Context API
 - API request / response DTO 穿透到 application 或 domain 層

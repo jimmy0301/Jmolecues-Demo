@@ -70,6 +70,7 @@ CQRS 讓這個問題消失：**看到 Command 就知道有 side effect，看到 
 
 Handler 本身不含業務邏輯，業務邏輯在 Aggregate 裡。
 一個 Command Handler 原則上只修改一個 Aggregate；跨 Aggregate 或跨 Context 的後續動作用事件、Process Manager 或 Saga 協調。
+若 Command 可能與同一 Aggregate 的其他 Command 並發，Handler 要處理 optimistic locking failure、重試策略或回傳明確衝突錯誤。
 
 ### Validation 分層
 
@@ -98,6 +99,22 @@ Command 可能因 HTTP retry、message retry 或使用者重複操作而被送�
 Event listener 也要具備冪等性，因為事件可能重送或重試。
 不要假設「只會收到一次」。
 本專案選擇讓 `PlaceOrderCommand` 對已成立訂單採 no-op 語意，不重複登記 `OrderPlaced`。
+
+### 並發與衝突
+
+CQRS 把寫入路徑集中在 Command Handler，但不代表 Command 會一個一個排隊。
+同一個 Aggregate 可能同時收到多個 Command，因此要定義衝突處理方式：
+
+| 情境 | 規範 |
+|---|---|
+| 兩個 Command 同時修改同一 Aggregate | 使用 optimistic locking 或資料庫版本欄位偵測衝突 |
+| Command 重試 | 先檢查 command 是否具備冪等語意 |
+| 版本衝突 | 重新載入再套用明確規則，或回傳 conflict 錯誤 |
+| 跨 Aggregate 衝突 | 不開大交易；改用事件、Process Manager / Saga 或補償 |
+
+若導入 Spring Data，可用 `@Version` 欄位展示 optimistic locking；若 demo 尚未實作，至少在規範與測試計畫中說明預期行為。
+悲觀鎖是例外手段，只能用在同一資料庫交易內可控、競爭極高且重試 / 補償成本不可接受的 Command。
+採用悲觀鎖時，必須在文件或 ADR 寫清楚鎖範圍、等待 timeout、deadlock 處理與壓力測試結果。
 
 ### Read Model 與 Projection
 
@@ -155,6 +172,8 @@ CQRS 的命名要讓 side effect 一眼可見：
 - Event 用過去式：`OrderCreated`、`OrderPlaced`
 - Query 用讀取語意：`FindOrderById`、`GetCustomerOrders`
 - 不用模糊名稱如 `OrderManager`、`OrderProcessor`、`OrderData`，除非它對應明確的架構角色
+- Process Manager / Saga 用流程名稱：`OrderFulfillmentProcessManager`、`PaymentReservationSaga`
+- Read model / projection 用查詢語意：`OrderSummary`、`OrderSummaryProjection`
 
 ---
 

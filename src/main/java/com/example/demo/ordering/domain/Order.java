@@ -10,6 +10,7 @@ import lombok.Getter;
 import org.jmolecules.ddd.annotation.AggregateRoot;
 import org.jmolecules.ddd.annotation.Identity;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.AbstractAggregateRoot;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -19,6 +20,8 @@ public class Order extends AbstractAggregateRoot<Order>
         implements org.jmolecules.ddd.types.AggregateRoot<Order, OrderId> {
 
     @Getter @Id @Identity private OrderId id;
+
+    @Getter @Version private Long version;
 
     private CustomerReference customer;
 

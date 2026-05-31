@@ -60,6 +60,9 @@ com.example.demo
 - Aggregate Root 必須保護 invariant；外部只能透過有業務語意的方法改變狀態，不暴露可修改集合或 setter 繞過規則
 - 一個 CommandHandler 原則上只修改一個 Aggregate；跨 Aggregate / 跨 Context 後續動作用 Domain Event、Process Manager 或 Saga
 - 跨 Context event 視為 Integration Event / public contract，欄位只用穩定型別，consumer 必須具備冪等性
+- 可被並發修改的 Aggregate 必須定義 optimistic locking / version conflict 策略；重送語意與並發策略需一致；悲觀鎖只能作為例外策略並需記錄鎖範圍、timeout、deadlock 處理與測試
+- Process Manager / Saga 只用於有狀態、多步驟、跨 Aggregate / Context / 外部系統流程，且需具備 correlation id、重試與補償策略
+- 命名必須使用所在 Bounded Context 的 ubiquitous language；Command 祈使句、Event 過去式、Query / Projection 讀取語意，避免模糊 `Manager` / `Processor` / `Data`
 - ValueObject / Command 必須不可變（record 或 final fields）
 - API request / response DTO、OpenAPI generated model、Spring MVC interface 只屬於 `infrastructure.web`；進入 application 前必須轉成 Command、Query 參數或 application result，禁止在 domain / domainservice / application 層使用
 - @Command 放在 `application.command` 套件；@CommandHandler 只在 `application` 層
@@ -122,5 +125,6 @@ mvn test -Dtest=JMoleculesArchitectureTest  # 只跑 ArchUnit
 @.codex/rules/bounded-context.md
 @.codex/rules/cqrs-annotations.md
 @.codex/rules/testing.md
+@.codex/rules/naming.md
 
 @/Users/keyulun/Documents/claude knowledge base/software-dev-kb/AGENTS.md
