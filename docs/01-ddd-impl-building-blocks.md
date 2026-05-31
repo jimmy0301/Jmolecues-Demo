@@ -73,6 +73,14 @@ public void place() {
 }
 ```
 
+`Order.place()` 同時展示兩個規則：
+
+- Aggregate Root 自己保護 invariant，只有 `PENDING` 訂單可以成立
+- 狀態改變和事件登記在同一個方法內完成，避免外部忘記補 event
+
+外部只能透過 `addItem()`、`place()`、`cancel()` 這類有業務語意的方法操作訂單。
+不要暴露可修改的 `items` list，也不要提供 `setStatus()` 讓外部繞過狀態機。
+
 ### Step 4：Domain Event — 狀態改變的記錄
 
 ```
@@ -87,6 +95,11 @@ ordering/application/OrderEventListener.java
 用 Event 後，`ordering` 只說「我下單了」，其他模組自己訂閱。
 **過去式命名**（`OrderPlaced` 而非 `PlaceOrder`）代表「已發生的事實」，不可被拒絕。
 
+若事件只在 `ordering` 內部使用，它是 Domain Event。
+若未來要給其他 Context 或外部系統消費，應視為 Integration Event / Public Event：欄位只放穩定型別，不暴露 `Order`、`OrderItem`、internal QueryModel 或 API DTO。
+
+Event listener 要能處理重送。若同一個 `OrderPlaced` 收到兩次，不應重複建立 projection、重複發通知或重複扣庫存；可用 event id、aggregate id + event type，或本地處理紀錄做去重。
+
 ### Step 5：Application Service — 協調者，不含業務邏輯
 
 ```
@@ -98,6 +111,7 @@ ordering/application/OrderService.java
 
 `OrderService` 只做三件事：取 Aggregate → 呼叫方法 → 儲存。
 **業務規則在 `Order.place()` 裡**，不在 Service 裡。
+同一個 command handler 原則上只修改一個 Aggregate；跨 Aggregate 的後續動作交給事件或 Process Manager / Saga。
 
 ```java
 @CommandHandler

@@ -29,6 +29,22 @@ Aggregate Root 是一群相關物件的統一入口，負責維護一致性邊�
 
 例如訂單模型中，外部應該呼叫 `Order.addItem(...)`、`Order.place()`，而不是直接修改 `OrderItem` 清單。
 
+Aggregate Root 的核心責任是保護 invariant（永遠必須成立的業務規則）。
+例如「已取消訂單不能再次成立」、「訂單項目數量必須大於 0」、「已成立訂單的成交價格不能被商品後續調價影響」。
+這些規則要放在 Aggregate / Entity / Value Object / Domain Service 中，不放在 Controller 或 Command Handler。
+
+外部也不應取得可修改的內部集合：
+
+```java
+// ✅ 正確：透過有業務語意的方法改變狀態
+order.addItem(productRef, productName, unitPrice, quantity);
+order.place();
+
+// ❌ 錯誤：繞過 Aggregate Root 的一致性規則
+order.getItems().add(item);
+order.setStatus(OrderStatus.PLACED);
+```
+
 ### Entity
 
 Entity 有唯一 ID 與生命週期；即使屬性改變，只要 ID 相同，仍代表同一個物件。
@@ -51,6 +67,15 @@ Domain Event 是 Aggregate 狀態改變時發出的通知，代表已經發生�
 例如 `OrderPlaced` 表示「訂單已成立」，不是「請成立訂單」。
 事件讓其他邏輯可以在不直接耦合 Aggregate 的情況下反應狀態變化。
 
+Domain Event 和 Integration Event 要區分：
+
+| 類型 | 用途 | 型別限制 |
+|---|---|---|
+| Domain Event | Context 內部的領域事實 | 可使用本 Context 的 ID / ValueObject，但仍需不可變 |
+| Integration Event / Public Event | 跨 Context 或跨系統的公開合約 | 只使用穩定型別，如 `UUID`、`String`、`Instant`、`BigDecimal`、public DTO |
+
+當事件會被其他 Context 消費時，就要把它當成公開合約管理，不要包含 owner Context 的 Aggregate、Entity、Repository、internal QueryModel 或 API DTO。
+
 ### Repository
 
 Repository 是 Aggregate Root 的持久化抽象，封裝儲存與查詢細節。
@@ -65,12 +90,19 @@ Domain Service 放置不自然屬於任一 Aggregate 的領域邏輯，通常是
 
 例如計算多個訂單項目的總價，可以放在 `PricingService`，而不是塞進 Controller 或 Repository。
 
+若邏輯只是單一 Aggregate 的狀態轉換，優先放在 Aggregate 方法。
+只有當規則橫跨多個 domain object，且不自然屬於任一物件時，才抽成 Domain Service。
+
 ### Bounded Context
 
 Bounded Context 是一個業務子域的邊界，有自己的模型、語言與規則。
 同一個詞在不同 Context 裡可以有不同意義，因此跨 Context 不應直接共用對方的 domain model。
 
 例如 `Customer` 在 customer context 可能代表會員帳戶與地址，在 ordering context 可能只代表「下單者的 reference」。
+
+每個 Bounded Context 都要保護自己的 Ubiquitous Language（通用語言）。
+外部系統或其他 Context 的詞彙進來時，要透過 public API、adapter 或 mapper 轉成本 Context 的語言；這層轉換就是 Anti-Corruption Layer（防腐層）。
+不要讓對方的欄位名稱、狀態 enum 或資料結構直接污染自己的 domain model。
 
 ### Shared Kernel
 
@@ -177,6 +209,37 @@ ordering ──publishes──▶ OrderPlaced ──consumed by──▶ invento
 事件代表「已發生的事實」，不是遠端方法呼叫。Producer 不應知道誰會處理事件。
 當事件被其他 Context 消費時，它就成為跨 Context 合約，語意上接近 Integration Event，應避免包含 owner 的 internal domain 型別。
 
+#### 交易邊界與 Aggregate 邊界
+
+一個 Command Handler 原則上只修改一個 Aggregate。
+Aggregate 是一致性和交易的最小邊界；同一個交易中同時修改多個 Aggregate，通常代表邊界切錯，或需要改用事件驅動流程。
+
+```java
+// ✅ 正確：同步交易內只修改 Order
+Order order = orderRepository.findById(command.orderId()).orElseThrow();
+order.place();
+orderRepository.save(order);
+
+// ❌ 錯誤：一個 use case 直接修改多個 Context / Aggregate
+order.place();
+product.decreaseStock();
+customer.addRewardPoints();
+```
+
+若下單後需要扣庫存、發通知、更新點數，應用 `OrderPlaced` 事件讓各自 owner Context 自己處理。
+需要跨多步驟協調時，使用 Process Manager / Saga；若某步失敗，設計補償動作，而不是把所有資料鎖在同一個大交易裡。
+
+#### Event Listener 規範
+
+Event listener 是事件消費者，不是 Aggregate invariant 的保護者。
+它可以觸發後續 use case、更新 projection、發通知或寫入整合資料，但要遵守以下規則：
+
+- listener 必須可重入且具備冪等性：同一事件重送不應造成重複扣庫存、重複寄信或重複建立資料
+- listener 不假設事件一定只來一次，也不假設跨 Aggregate / 跨 Context 事件一定按順序抵達
+- listener 失敗時要能重試；若無法重試，需有補償或人工處理路徑
+- 複雜流程不要塞在 listener 裡，抽成 Application Service、Process Manager 或 Saga
+- listener 不直接修改非 owner Context 的資料庫
+
 #### Snapshot — 保存本 Context 的歷史事實
 
 有些資料一旦進入本 Context，就變成本 Context 的歷史事實。
@@ -241,10 +304,12 @@ private OrderResponse response;
 - 直接 import 另一個 Context 的 `domain` / `application` / `repository` package
 - 跨 Context 使用 Repository
 - 直接修改另一個 Context 的資料庫
+- 一個 Command Handler 在同一交易內修改多個 Aggregate 或多個 Context
 - 公開 DTO 洩漏 owner 的 domain type
 - 把內部實作細節包成公開合約，而不是設計穩定的跨 Context API
 - API request / response DTO 穿透到 application 或 domain 層
 - 直接把 OpenAPI generated model 標成 `@Command`、`@ValueObject` 或 `@DomainEvent`
+- listener 沒有冪等設計，事件重送時造成重複 side effect
 
 → 本專案的 Bounded Context 與跨 Context 實作見 [Bounded Context 與跨 Context 實作](01-ddd-impl-bounded-context.md)
 

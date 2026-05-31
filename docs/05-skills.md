@@ -182,7 +182,7 @@ EventListener.on(event)      →   @ApplicationModuleListener（async、交易�
 跨多個 Entity/Aggregate，不需要資料庫
   → Domain Service（domainservice/）
 
-需要協調：載入 → 執行邏輯 → 儲存 → 發布 Event
+需要協調：載入 → 執行邏輯 → 儲存（Spring Data 發布已登記 Event）
   → Application Service（application/）
 ```
 
@@ -192,9 +192,10 @@ EventListener.on(event)      →   @ApplicationModuleListener（async、交易�
 | Annotation | `@Service`（jMolecules） | `@Service`（Spring） |
 | 可依賴 | Domain 物件 | Repository、Domain Service |
 | 輸入邊界 | Domain 物件 | `@Command` / application input；API DTO 必須先在 `infrastructure.web` 轉換 |
+| 交易邊界 | 不開交易、不存資料 | 原則上單一 handler 修改單一 Aggregate |
 | 典型例子 | `PricingService`、`DiscountPolicy` | `OrderService`、`CustomerService` |
 
-**完成後：** 自動補對應單元測試（Domain Service 不 mock；Application Service mock Repository，event 驗證透過 `getRegisteredEvents()` 檢查 aggregate）。
+**完成後：** 自動補對應單元測試（Domain Service 不 mock；Application Service mock Repository，event 驗證透過 `getRegisteredEvents()` 檢查 aggregate；若 command 有冪等語意，補重送測試）。
 
 ---
 

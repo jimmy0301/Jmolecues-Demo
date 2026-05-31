@@ -20,6 +20,7 @@
 | 讀取外部 Context 的展示資料 | 使用 owner Context 的 `publicapi` Facade，例如 `ProductQueryFacade` | import 對方的 QueryModel、Repository、domain model |
 | 保存下單當下的商品名稱與價格 | 在 `OrderItem` 保存 snapshot | 每次顯示歷史訂單都查最新商品資料 |
 | 通知其他 Context 發生了什麼事 | 發布 Domain Event，例如 `OrderPlaced` | 直接修改其他 Context 的資料庫 |
+| 對接外部語言或資料模型 | 建立 Anti-Corruption Layer，轉成本 Context 的 Reference / Snapshot / Command | 讓外部 DTO、狀態 enum 或欄位命名進入 domain |
 
 ---
 
@@ -98,6 +99,7 @@ jMolecules ArchUnit DDD rules 會檢查泛型參數，容易把 `Association<Cus
 ## Step 2：用 publicapi 讀取外部資料
 
 讀取外部 Context 的資料時，依賴 owner Context 公開的 API，不依賴它的內部實作。
+這個 publicapi 同時扮演 Anti-Corruption Layer：把 owner Context 的資料轉成本 Context 能理解的穩定合約。
 
 在 `catalog/publicapi/`：
 
@@ -129,6 +131,9 @@ import com.example.demo.catalog.domain.Product;
 import com.example.demo.catalog.domain.ProductId;
 import com.example.demo.catalog.domain.ProductRepository;
 ```
+
+其他 Context 拿到 `ProductSummary` 後，應立即轉成自己的語言。
+例如 `ordering` 在建立訂單項目時保存 `ProductReference` 和商品 snapshot，而不是把 `ProductSummary` 長期存在 Aggregate 裡。
 
 ---
 
@@ -183,6 +188,16 @@ ordering.domain.Order.place()
 事件被其他 Context 消費時，就成為跨 Context 合約。
 公開事件不要包含 owner 的 internal domain 型別。
 
+### Domain Event vs Integration Event
+
+| 類型 | 使用範圍 | 本專案規則 |
+|---|---|---|
+| Domain Event | Context 內部描述領域事實 | 可放在 `domain/`，用 `@DomainEvent record`，不可變 |
+| Integration Event / Public Event | 跨 Context 或跨系統溝通 | 欄位只用穩定型別，不暴露 owner internal domain type |
+
+當 `OrderPlaced` 只有 `ordering` 自己聽，它是 Domain Event。
+當 `inventory`、`payment` 或外部系統開始依賴它，它就同時承擔公開合約責任；此時要考慮版本相容、欄位穩定性、事件重送與消費端冪等。
+
 ---
 
 ## 新增跨 Context 互動時的檢查清單
@@ -190,7 +205,9 @@ ordering.domain.Order.place()
 - 先確認資料 owner 是哪個 Context
 - 不 import 對方的 `domain`、`application`、`repository` package
 - 只透過 `publicapi`、事件或本地 Reference Object 互動
+- 將外部模型透過 Anti-Corruption Layer 轉成本 Context 的語言
 - Public DTO 不回傳 Aggregate、Entity、Repository、internal Value Object
 - Public DTO 不重用 HTTP request / response DTO 或 OpenAPI generated model
+- 跨 Context event 視為 Integration Event，欄位使用穩定型別並考慮版本相容
 - 歷史資料需要穩定呈現時，在本 Context 保存 snapshot
 - 新增公開合約後，補測試並跑架構驗證

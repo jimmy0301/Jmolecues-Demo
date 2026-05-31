@@ -7,3 +7,6 @@
 - Controller 測試要驗證 API request DTO 會轉成正確 Command / Query 參數，response 不洩漏 Aggregate 內部細節。
 - Application Service 測試用 mock Repository，驗證 Command Handler 流程與 Aggregate event registration。
 - Domain Model 測試直接驗證業務規則與狀態轉換，不經由 Controller 或 API DTO。
+- Domain Model 測試要覆蓋 Aggregate invariant 和非法狀態轉換。
+- 若 Command 或 listener 宣告冪等，測試要覆蓋重送同一 command / event 的結果。
+- Projection 測試要覆蓋重建與重複事件處理。

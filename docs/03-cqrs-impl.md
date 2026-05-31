@@ -50,6 +50,7 @@ ordering/
 
 Command 必須**不可變**，且只能放在 `*.application.command` 套件。
 Command 表達 use case 意圖，不是 HTTP request DTO；即使欄位和 API payload 一樣，也要由 Controller 明確轉換。
+若 command 可能由外部重送，需設計 request id / command id 或明確定義重送語意。
 
 ```java
 // ✅ 正確：record 天生不可變，位於 application.command
@@ -69,6 +70,8 @@ public class PlaceOrderCommand {
 ## @CommandHandler
 
 只能在 application 層（`*.application.*`）。Handler 協調 Repository 與 Event，業務邏輯留在 Aggregate。
+每個 handler 原則上只修改一個 Aggregate；需要觸發其他 Aggregate 或 Context 時，依靠已登記的 Domain Event、Process Manager 或 Saga。
+Transport validation 在 Controller，業務 invariant 在 Aggregate，Handler 只做 use case validation 與協調。
 
 ```java
 @Service
@@ -100,6 +103,7 @@ public class OrderService {
 ## @QueryModel
 
 不可呼叫任何 `@CommandHandler` 方法，也不可透過 `save()`、`delete()`、domain event 或 Aggregate mutating method 造成狀態改變。
+QueryModel 可以回傳為查詢最佳化的 read model / projection；projection 可以 eventual consistent，但必須能重建且重複處理同一事件不造成重複資料。
 
 ```java
 // ✅ 正確：只讀
@@ -120,6 +124,7 @@ public class OrderQueryModel {
 ## 單元測試
 
 Application Service 用 Mockito mock Repository，驗證 command handler 流程；event 驗證改為捕捉傳入 `save()` 的 aggregate，再檢查 `getRegisteredEvents()`：
+若 command 定義為冪等，測試需覆蓋重送情境，例如第二次 `PlaceOrderCommand` 的預期結果。
 
 ```java
 @ExtendWith(MockitoExtension.class)
@@ -153,6 +158,7 @@ class OrderServiceTest {
 
 Controller 用 `@WebMvcTest` 做 HTTP slice 測試，只載入 web 層，不啟動 MongoDB。Application Service 與 QueryModel 以 `@MockBean` 替換：
 Controller 同時是 API DTO 和 application model 的轉換邊界；測試應驗證 request DTO 會被轉成正確 Command，response 不直接洩漏 Aggregate 內部細節。
+API 層測 transport validation；domain invariant 仍由 domain / application 測試覆蓋。
 
 ```java
 @WebMvcTest(OrderController.class)

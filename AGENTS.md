@@ -57,11 +57,15 @@ com.example.demo
 - 跨 Context 用 Reference Object（`@ValueObject record XxxReference(UUID id)`），不 import 對方型別、不持有 Aggregate 物件
 - 跨 Context 讀取 / 更新資料只透過 owner Context 的公開契約（Query Facade、Command Facade、Event、Read Model、Snapshot），不直接使用對方 Repository 或資料庫
 - Repository 只為 AggregateRoot 建立
+- Aggregate Root 必須保護 invariant；外部只能透過有業務語意的方法改變狀態，不暴露可修改集合或 setter 繞過規則
+- 一個 CommandHandler 原則上只修改一個 Aggregate；跨 Aggregate / 跨 Context 後續動作用 Domain Event、Process Manager 或 Saga
+- 跨 Context event 視為 Integration Event / public contract，欄位只用穩定型別，consumer 必須具備冪等性
 - ValueObject / Command 必須不可變（record 或 final fields）
 - API request / response DTO、OpenAPI generated model、Spring MVC interface 只屬於 `infrastructure.web`；進入 application 前必須轉成 Command、Query 參數或 application result，禁止在 domain / domainservice / application 層使用
 - @Command 放在 `application.command` 套件；@CommandHandler 只在 `application` 層
 - @Command 是 use case input，不是 API DTO；@CommandHandler 不應為了 Controller 方便而直接暴露 Aggregate 當 response
-- @QueryModel 不可呼叫 @CommandHandler、不可 save/delete/publish event（read side 不觸發 state change）
+- @QueryModel 不可呼叫 @CommandHandler、不可 save/delete/publish event（read side 不觸發 state change）；projection 可 eventual consistent，但必須可重建且可冪等處理事件
+- 驗證需分層：transport validation 在 Controller/API DTO，use case validation 在 Application，business invariant 在 Domain
 - 每次新增 class 後執行 `mvn spotless:apply` 再跑 ArchUnit test
 - Controller 新增時補對應 `@WebMvcTest` API 測試，放在相同 package（`infrastructure.web`）
 

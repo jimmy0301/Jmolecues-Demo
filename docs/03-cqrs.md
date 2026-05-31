@@ -48,6 +48,7 @@ CQRS 讓這個問題消失：**看到 Command 就知道有 side effect，看到 
 - 通常不回傳業務資料（或只回傳 ID / 執行狀態）
 - 一個 Command 對應一個明確的業務操作
 - Command 是 application 層的 use case input，不是 HTTP request DTO，也不是 OpenAPI generated model
+- 對外部可能重送的操作，Command 應有明確冪等策略
 
 ### Query — 讀取請求
 
@@ -57,6 +58,7 @@ CQRS 讓這個問題消失：**看到 Command 就知道有 side effect，看到 
 - 可以安全重複呼叫，結果相同
 - 可以針對讀取需求獨立優化（快取、索引、read model）
 - Query path 不 dispatch command、不 publish domain event、不呼叫會修改 Aggregate 狀態的方法
+- Query 回傳的是 read side contract，不必和 Aggregate 結構一樣
 
 ### Command Handler — 執行者
 
@@ -67,6 +69,47 @@ CQRS 讓這個問題消失：**看到 Command 就知道有 side effect，看到 
 3. 儲存並發布 Domain Event
 
 Handler 本身不含業務邏輯，業務邏輯在 Aggregate 裡。
+一個 Command Handler 原則上只修改一個 Aggregate；跨 Aggregate 或跨 Context 的後續動作用事件、Process Manager 或 Saga 協調。
+
+### Validation 分層
+
+不同驗證屬於不同層，不能全部塞進 Controller 或 Command Handler：
+
+| 驗證類型 | 放置位置 | 例子 |
+|---|---|---|
+| Transport validation | Controller / API DTO | JSON 格式、必填欄位、字串長度、型別格式 |
+| Use case validation | Application Service / Command Handler | 使用者是否可執行此操作、外部 reference 是否存在 |
+| Domain invariant | Aggregate / Entity / ValueObject / Domain Service | 訂單只能從 `PENDING` 變成 `PLACED`、數量必須大於 0 |
+| Cross-context validation | Application Service 透過 publicapi | 商品是否存在、顧客是否可下單 |
+
+API validation 只能保證 request 長得合理；Domain invariant 才保證業務狀態永遠合法。
+
+### 冪等性與重送
+
+Command 可能因 HTTP retry、message retry 或使用者重複操作而被送出多次。
+每個會被外部重送的 command 都要定義重送語意：
+
+| 情境 | 可接受策略 |
+|---|---|
+| `CreateOrderCommand` 重送 | 使用 request id / client command id 去重，或回傳既有 order id |
+| `PlaceOrderCommand` 重送 | 若訂單已成立，可視為成功或回傳明確錯誤，但規則要固定 |
+| `CancelOrderCommand` 重送 | 若已取消，可視為成功或回傳明確錯誤 |
+
+Event listener 也要具備冪等性，因為事件可能重送或重試。
+不要假設「只會收到一次」。
+
+### Read Model 與 Projection
+
+CQRS 允許 read side 和 write side 使用不同模型。
+QueryModel / projection 可以為了查詢需求反正規化，例如預先保存訂單列表需要的顧客名稱、商品名稱或總金額。
+
+規則：
+
+- read model 是查詢合約，不是 Aggregate
+- projection 可以 eventual consistent，剛寫完資料不一定立刻反映在查詢結果中
+- API 若讀 projection，要能接受短暫延遲或提供明確的 read-your-write 策略
+- QueryModel 不為了補資料而觸發 command 或修改 write model
+- projection 重建應可重跑，重複處理同一事件不能產生重複資料
 
 ### DTO 邊界 — CQRS 與 Web Adapter 分工
 
@@ -102,6 +145,15 @@ public Order handle(CreateOrderRequest request) { ... }
 
 Command Handler 的回傳值也要克制。Production code 優先回傳 `void`、ID、簡單 result 或 application result DTO；
 不要為了讓 Controller 方便序列化，就直接把 Aggregate 當 API response 暴露出去。
+
+### 命名規則
+
+CQRS 的命名要讓 side effect 一眼可見：
+
+- Command 用祈使句：`CreateOrderCommand`、`PlaceOrderCommand`
+- Event 用過去式：`OrderCreated`、`OrderPlaced`
+- Query 用讀取語意：`FindOrderById`、`GetCustomerOrders`
+- 不用模糊名稱如 `OrderManager`、`OrderProcessor`、`OrderData`，除非它對應明確的架構角色
 
 ---
 

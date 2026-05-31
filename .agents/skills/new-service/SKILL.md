@@ -26,10 +26,10 @@ Application Service 是「**做什麼（Use Case）**」，Domain Service 是「
 | **角色** | 指揮官、協調者 | 專家、業務計算者 |
 | **Ring** | `application/` `@ApplicationServiceRing` | `domainservice/` `@DomainServiceRing` |
 | **層級** | 應用層（外層） | 領域層（內層） |
-| **職責** | 流程控制：Command/Application input → Domain、載入 Aggregate、調用業務邏輯、事務提交、發布 Event | 業務規則：處理跨 Entity/Aggregate 的領域邏輯 |
+| **職責** | 流程控制：Command/Application input → Domain、載入 Aggregate、調用業務邏輯、儲存 Aggregate 以發布已登記 Event | 業務規則：處理跨 Entity/Aggregate 的領域邏輯 |
 | **輸入** | ID、`@Command` 或 application input（API DTO 必須先在 `infrastructure.web` 轉換） | Domain 物件（Aggregate、ValueObject） |
 | **輸出** | void、ID、application result，或必要時回傳 Aggregate（不直接當 API response） | 計算結果（ValueObject 或 primitive） |
-| **依賴** | 可依賴 Repository、ApplicationEventPublisher、Domain Service | 只依賴 domain layer，不碰 Repository、不發 Event |
+| **依賴** | 可依賴 Repository、Domain Service | 只依賴 domain layer，不碰 Repository、不發 Event |
 | **annotation** | `@Service`（Spring `org.springframework.stereotype.Service`） | `@Service`（jMolecules `org.jmolecules.ddd.annotation.Service`） |
 | **典型例子** | `OrderService`、`RegisterUserService` | `PricingService`、`TransferService`、`DiscountPolicy` |
 | **商業邏輯** | 不包含，只有流程 | 包含複雜業務規則 |
@@ -45,7 +45,7 @@ Application Service 是「**做什麼（Use Case）**」，Domain Service 是「
 邏輯跨多個 Entity/Aggregate，且不需要存取資料庫
   → Domain Service（domainservice/）
 
-需要協調：載入 Aggregate → 執行邏輯 → 儲存 → 發布 Event
+需要協調：載入 Aggregate → 執行邏輯 → 儲存（Spring Data 發布已登記 Event）
   → Application Service（application/）
 ```
 
@@ -108,7 +108,7 @@ public class <ServiceName> {
 
 典型場景：
 - 處理從 Controller / 外部系統進來的請求
-- 從 Repository 載入 Aggregate，委派業務邏輯，再儲存並發布 Event
+- 從 Repository 載入 Aggregate，委派業務邏輯，再儲存 Aggregate
 - 事務邊界、權限校驗、通知外部系統
 
 ```
@@ -131,11 +131,9 @@ import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
 public class <ServiceName> {
 
     private final <AggregateRoot>Repository repository;
-    private final ApplicationEventPublisher events;  // org.springframework.context.ApplicationEventPublisher
 
-    public <ServiceName>(<AggregateRoot>Repository repository, ApplicationEventPublisher events) {
+    public <ServiceName>(<AggregateRoot>Repository repository) {
         this.repository = repository;
-        this.events = events;
     }
 
     // Use Case：建立（接受 @Command 作為參數，方法加 @CommandHandler）
@@ -144,11 +142,11 @@ public class <ServiceName> {
         return repository.save(new <AggregateRoot>(command.<field>()));
     }
 
-    // Use Case：狀態變更 + 發布 Event
+    // Use Case：狀態變更 + 儲存 Aggregate（event 已在 Aggregate 登記）
     @CommandHandler
     public <AggregateRoot> handle(<Action><AggregateRoot>Command command) {
         <AggregateRoot> aggregate = findOrThrow(command.id());
-        events.publishEvent(aggregate.<action>());   // producer 方法回傳 event
+        aggregate.<action>();
         return repository.save(aggregate);
     }
 
@@ -168,7 +166,10 @@ public class <ServiceName> {
 - 不包含 if/else 業務判斷（業務邏輯在 Aggregate 或 Domain Service 裡）
 - 不接收 API request / response DTO、OpenAPI generated model 或 Spring MVC interface
 - Command 是 use case input，不是 transport DTO；Controller 負責 DTO 與 Command / result 的轉換
-- 流程固定：載入 → 委派給 Aggregate → 儲存 → 發布 Event
+- 一個 Command Handler 原則上只修改一個 Aggregate
+- 對外部可能重送的 Command，需定義冪等策略或重送語意
+- validation 分層：transport validation 在 Controller/API DTO，use case validation 在 Application，business invariant 在 Domain
+- 流程固定：載入 → 委派給 Aggregate → 儲存（Spring Data 發布 Aggregate 已登記的 event）
 
 ---
 
@@ -179,7 +180,7 @@ public class <ServiceName> {
 3. 更新 `<context>/AGENTS.md`，將新 Service 加入 Classes 表格
 4. 建立對應單元測試：
    - **Domain Service** → 直接 `new PricingService()`，不 mock，測試計算邏輯與邊界條件
-   - **Application Service** → `@ExtendWith(MockitoExtension.class)` + `@Mock Repository` + `@Mock ApplicationEventPublisher`，驗證 command handler 流程與 event 發布
+   - **Application Service** → `@ExtendWith(MockitoExtension.class)` + `@Mock Repository`，驗證 command handler 流程，並捕捉保存的 aggregate 檢查 `getRegisteredEvents()`
 
    測試位置：`src/test/java/<base-package>/<context>/<ring>/<ServiceName>Test.java`
 
