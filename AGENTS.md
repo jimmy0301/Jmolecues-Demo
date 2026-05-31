@@ -63,7 +63,7 @@ com.example.demo
 - 跨 Context event 視為 Integration Event / public contract，欄位只用穩定型別，consumer 必須具備冪等性
 - Public API / Integration Event / public DTO 預設只做 additive change；breaking change 需有 deprecation、migration 與 rollback 計畫
 - Feature toggle 放在 application / infrastructure adapter，不放在 domain；toggle 需有 owner、預設值與移除條件
-- Data migration 使用 Flamingock Change；已部署 Change 不可修改，修正需新增下一個 Change，且必須有 rollback 或補償策略
+- Data migration 使用 Flamingock Change；MongoDB index 建立 / 調整 / 刪除一律透過 Flamingock；已部署 Change 不可修改，修正需新增下一個 Change，且必須有 rollback 或補償策略
 - 可被並發修改的 Aggregate 必須定義 optimistic locking / version conflict 策略；重送語意與並發策略需一致；悲觀鎖只能作為例外策略並需記錄鎖範圍、timeout、deadlock 處理與測試；MongoDB 若需悲觀鎖語意，用 lease lock 範例，不宣稱有 SQL row lock
 - Process Manager / Saga 只用於有狀態、多步驟、跨 Aggregate / Context / 外部系統流程，且需具備 correlation id、重試與補償策略
 - 命名必須使用所在 Bounded Context 的 ubiquitous language；Command 祈使句、Event 過去式、Query / Projection 讀取語意，避免模糊 `Manager` / `Processor` / `Data`

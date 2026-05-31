@@ -29,6 +29,7 @@ Production feature 不只包含程式碼變更，也包含部署順序、資料�
 
 Data migration 使用 Flamingock Change 管理，避免一次性手動腳本造成環境漂移。
 Flamingock Change 必須是版本控管、可稽核、可重跑、可 rollback 或可補償的 migration 單位。
+MongoDB index 建立、調整、刪除也屬於 migration，必須透過 Flamingock Change 管理。
 
 ### Backward Compatibility
 
@@ -46,6 +47,7 @@ API、event、read model 與 public DTO 預設只做 additive change：
 - Migration 要能重跑，且要能觀察進度與失敗筆數。
 - Data migration 使用 Flamingock；已部署 Change 不可修改，修正請新增下一個 Change。
 - Flamingock Change 要有 `@Rollback` 或明確補償流程。
+- MongoDB index 建立、調整、刪除一律走 Flamingock Change，不使用手動腳本或 application startup code。
 - Backfill 不直接繞過 Aggregate invariant；必要時透過 application use case 或明確的 migration adapter。
 - 新增查詢欄位或 read model 欄位時，檢查 index 與既有資料預設值。
 - Rollback 策略要在 PR 內說明：關閉 toggle、回復讀取路徑、停止 consumer 或保留 dual write。

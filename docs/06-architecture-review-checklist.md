@@ -54,6 +54,7 @@
 - Migration / backfill 可重跑，且不繞過 Aggregate invariant
 - Data migration 使用 Flamingock Change；已部署 Change 沒有被修改
 - Flamingock Change 有 rollback 或明確補償策略，且大量資料 migration 有 batching / observability
+- MongoDB index 建立 / 調整 / 刪除透過 Flamingock Change，沒有手動腳本或 startup code
 - Rollback 策略已描述：關閉 toggle、回復讀取路徑、停止 consumer 或保留 dual write
 
 ## Tests and Docs

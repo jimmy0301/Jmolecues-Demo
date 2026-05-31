@@ -24,6 +24,7 @@
 - 事件消費者要能處理重送，projection 要能重建
 - Public contract 變更優先使用 additive change、deprecation 與 expand-and-contract migration
 - Data migration 用 Flamingock Change，不使用一次性手動腳本
+- MongoDB index 建立、調整、刪除都要透過 Flamingock Change
 
 ## 獨立開發前
 

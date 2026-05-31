@@ -10,7 +10,8 @@
 - Integration Event / public event consumer 必須冪等，能處理重送、重試與順序不保證。
 - Public API、Integration Event、public DTO 預設只做 additive change；breaking change 必須有 deprecation 與 migration 流程。
 - Consumer 必須能忽略未知欄位；producer 不要求所有 consumer 同步部署。
-- Data migration 使用 Flamingock Change；migration class 不放在 domain layer，不直接建立跨 Context internal type 依賴。
+- Data migration 使用 Flamingock Change；MongoDB index 建立 / 調整 / 刪除一律透過 Flamingock，不使用手動腳本或 application startup code。
+- Migration class 不放在 domain layer，不直接建立跨 Context internal type 依賴。
 - 外部系統或其他 Context 的模型必須透過 Anti-Corruption Layer 轉成本 Context 的語言。
 - Process Manager / Saga 只透過 owner Context 的公開合約推進流程，不直接修改其他 Context 的資料庫。
 - 跨 Context 流程必須有 correlation id / process id、重試策略與補償策略。

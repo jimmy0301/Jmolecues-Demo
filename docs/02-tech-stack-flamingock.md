@@ -31,6 +31,27 @@ Flamingock 是本專案 data migration 的標準工具，用來把資料庫欄�
 
 ---
 
+## MongoDB Index 標準
+
+團隊建立、調整、刪除 MongoDB index 一律透過 Flamingock Change。
+不要用 Mongo shell 手動建立 index，也不要把 index 建立邏輯散落在 application startup code、Repository 初始化或測試 fixture。
+
+原因：
+
+- index 是 production 行為的一部分，需要跟程式碼一起版本控管
+- 每個環境都要能用同一份 Change 重建一致狀態
+- rollback、audit log、執行順序與失敗處理必須可追蹤
+- index 變更常與 read model / query path / rollout 順序有關，需要放進 PR review
+
+新增查詢條件或 read model 欄位時，PR 必須同時回答：
+
+- 是否需要新 index 或調整既有 index？
+- index 是否可以 background / online 建立？
+- 是否會影響大量資料 collection 的寫入或查詢效能？
+- rollback 是 drop index、保留 index，還是等下一個 Change 處理？
+
+---
+
 ## 專案規範
 
 - Change 一旦部署，不可修改既有檔案；修正請新增下一個 Change。
@@ -39,6 +60,7 @@ Flamingock 是本專案 data migration 的標準工具，用來把資料庫欄�
 - 每個 Change 必須有 `@Rollback` 或 template rollback；無法完整 rollback 時，PR 要寫明補償方式。
 - Migration 要可重跑；filter 必須只挑尚未遷移或需要修正的資料。
 - Backfill 不直接繞過 Aggregate invariant；若必須直接更新 collection，需限制在資料形狀調整、index、舊資料補值等 technical migration。
+- MongoDB index 建立、調整、刪除一律使用 Flamingock Change。
 - 大量資料 migration 要分批、可觀測，並記錄處理筆數與失敗筆數。
 - Breaking contract change 必須搭配 expand-and-contract、feature toggle 或 deprecation 流程。
 
