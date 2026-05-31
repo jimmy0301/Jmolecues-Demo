@@ -104,4 +104,5 @@ mvn test -Dtest=ModularityTest
 
 - [`docs/adr/001-use-jmolecules.md`](docs/adr/001-use-jmolecules.md) — 為何選擇 jMolecules 的架構決策記錄
 - [`decisions/2026-05-31-annotation-first-architecture-tests.md`](decisions/2026-05-31-annotation-first-architecture-tests.md) — 架構測試以 annotation / package metadata 為主
+- [`CHANGELOG.md`](CHANGELOG.md) — 專案重要變更紀錄
 - [`patterns/`](patterns/) — 跨專案可重用的技術模式
