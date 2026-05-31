@@ -112,7 +112,7 @@ CQRS 把寫入路徑集中在 Command Handler，但不代表 Command 會一個�
 | 版本衝突 | 重新載入再套用明確規則，或回傳 conflict 錯誤 |
 | 跨 Aggregate 衝突 | 不開大交易；改用事件、Process Manager / Saga 或補償 |
 
-若導入 Spring Data，可用 `@Version` 欄位展示 optimistic locking；若 demo 尚未實作，至少在規範與測試計畫中說明預期行為。
+若導入 Spring Data，可用 `@Version` 欄位展示 optimistic locking。
 悲觀鎖是例外手段，只能用在同一資料庫交易內可控、競爭極高且重試 / 補償成本不可接受的 Command。
 採用悲觀鎖時，必須在文件或 ADR 寫清楚鎖範圍、等待 timeout、deadlock 處理與壓力測試結果。
 
@@ -205,6 +205,8 @@ CQRS 的命名要讓 side effect 一眼可見：
 - 不用模糊名稱如 `OrderManager`、`OrderProcessor`、`OrderData`，除非它對應明確的架構角色
 - Process Manager / Saga 用流程名稱：`OrderFulfillmentProcessManager`、`PaymentReservationSaga`
 - Read model / projection 用查詢語意：`OrderSummary`、`OrderSummaryProjection`
+
+Process Manager / Saga 範例見 [Process Manager / Saga 範例](03-cqrs-process-manager-saga-example.md)。
 
 ---
 

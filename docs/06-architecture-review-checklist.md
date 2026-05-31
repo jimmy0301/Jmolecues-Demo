@@ -35,6 +35,7 @@
 - Listener 可重入且具備冪等性
 - Projection 可重建，重複處理事件不產生重複資料
 - 多步驟且有狀態的流程使用 Process Manager / Saga，不塞進普通 listener
+- Process Manager / Saga 有 process id / correlation id、流程狀態、timeout、retry 與補償策略
 
 ## Concurrency
 

@@ -63,7 +63,6 @@ Aggregate 是交易邊界，但仍可能同時收到多個 Command。
 - 使用悲觀鎖必須寫明原因、鎖範圍、timeout、deadlock 處理與測試案例
 - 並發行為要有測試，至少覆蓋同一 Aggregate 的重複 Command 或版本衝突處理
 
-悲觀鎖範例只放在文件做教學用途；本專案實際程式碼仍以 optimistic locking 為預設。
 若底層是 SQL/JPA，常見形式是用 repository 查詢時帶 lock：
 
 ```java
@@ -122,6 +121,8 @@ Process Manager / Saga 的責任是協調流程，不是擁有別人的資料：
 命名上，只有真的保存流程狀態並協調多步驟時，才使用 `*ProcessManager` 或 `*Saga`。
 單純聽到事件後做一件事的 class 仍是 listener，例如 `OrderPlacedListener`。
 
+範例流程見 [Process Manager / Saga 範例](03-cqrs-process-manager-saga-example.md)。
+
 ## 常見反模式
 
 - 一個 Command Handler 在同一交易內修改多個 Aggregate 或多個 Context
@@ -135,4 +136,5 @@ Process Manager / Saga 的責任是協調流程，不是擁有別人的資料：
 相關 pattern：
 [Aggregate Transaction Boundary](../patterns/aggregate-transaction-boundary.md)、
 [Optimistic Locking and Concurrency](../patterns/optimistic-locking-concurrency.md)、
-[Process Manager Saga](../patterns/process-manager-saga.md)。
+[Process Manager Saga](../patterns/process-manager-saga.md)、
+[Process Manager / Saga 範例](03-cqrs-process-manager-saga-example.md)。
