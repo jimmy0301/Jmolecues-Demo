@@ -9,5 +9,5 @@
 - Aggregate Root 必須保護 invariant，外部不可透過 setter 或可修改 collection 繞過狀態轉換方法。
 - 單一 Command Handler 原則上只修改一個 Aggregate；跨 Aggregate 後續動作用 event、Process Manager 或 Saga。
 - 可被並發修改的 Aggregate 應有 optimistic locking / version 策略，並定義衝突時的錯誤、重試或重新載入規則。
-- 悲觀鎖只能作為例外策略；使用時必須記錄原因、鎖範圍、timeout、deadlock 處理與測試。
+- 悲觀鎖只能作為例外策略；使用時必須記錄原因、鎖範圍、timeout、deadlock 處理與測試。MongoDB 專案若需要悲觀鎖語意，文件範例應使用 lease lock，不宣稱有 SQL row lock。
 - `*ProcessManager` / `*Saga` 只能用於有狀態、多步驟、跨 Aggregate / Context / 外部系統的流程協調。

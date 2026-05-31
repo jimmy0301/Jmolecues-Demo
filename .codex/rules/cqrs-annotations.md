@@ -7,7 +7,7 @@
 - 一個 `@CommandHandler` 原則上只修改一個 Aggregate。
 - 對外部可能重送的 Command，必須定義冪等策略或重送語意。
 - 同一 Aggregate 可能收到並發 Command；Command Handler 必須定義 optimistic locking failure、retry 或 conflict response 的處理方式。
-- 悲觀鎖只用於高競爭且 retry / compensation 不適合的 Command，並需明確 lock scope、timeout 與 deadlock handling。
+- 悲觀鎖只用於高競爭且 retry / compensation 不適合的 Command，並需明確 lock scope、timeout 與 deadlock handling；持鎖期間只能涵蓋載入 Aggregate、執行 domain method、儲存。
 - Command Handler 優先回傳 `void`、ID、簡單 result 或 application result DTO；不直接為 API response 暴露 Aggregate。
 - `@QueryModel` 只能讀取，不呼叫 `@CommandHandler`，不 save/delete，不 publish event，不呼叫 Aggregate mutating method。
 - Projection / read model 可以 eventual consistent，但必須能重建且重複處理同一事件不產生重複資料。

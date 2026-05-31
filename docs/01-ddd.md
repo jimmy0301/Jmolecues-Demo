@@ -252,6 +252,49 @@ Aggregate 是交易邊界，但仍可能同時收到多個 Command。
 - 使用悲觀鎖必須寫明原因、鎖範圍、timeout、deadlock 處理與測試案例
 - 並發行為要有測試，至少覆蓋同一 Aggregate 的重複 Command 或版本衝突處理
 
+悲觀鎖範例只放在文件做教學用途；本專案實際程式碼仍以 optimistic locking 為預設。
+若底層是 SQL/JPA，常見形式是用 repository 查詢時帶 lock：
+
+```java
+public interface OrderJpaRepository extends JpaRepository<Order, OrderId> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.id = :id")
+    Optional<Order> findByIdForUpdate(OrderId id);
+}
+
+@Transactional(timeout = 3)
+public void placeWithPessimisticLock(PlaceOrderCommand command) {
+    Order order = orderRepository.findByIdForUpdate(command.orderId())
+            .orElseThrow(OrderNotFoundException::new);
+
+    order.place();
+    orderRepository.save(order);
+}
+```
+
+若底層是 MongoDB，沒有 SQL row lock；可用短租約 lock document 示範「同一 Aggregate 同時間只允許一個 command 進入臨界區」：
+
+```java
+public interface PessimisticOrderLock {
+    LockToken acquire(OrderId orderId, Duration waitTimeout, Duration leaseTtl);
+    void release(LockToken token);
+}
+
+public void placeWithLeaseLock(PlaceOrderCommand command) {
+    LockToken token = lock.acquire(command.orderId(), Duration.ofSeconds(2), Duration.ofSeconds(10));
+    try {
+        Order order = orderRepository.findById(command.orderId()).orElseThrow();
+        order.place();
+        orderRepository.save(order);
+    } finally {
+        lock.release(token);
+    }
+}
+```
+
+Mongo lease lock 必須有唯一 lock key、`expiresAt`、owner token，以及 `finally` release；測試要覆蓋 acquire 失敗、timeout、TTL 過期後可重新取得、release 不可釋放別人的 lock。
+
 #### Process Manager / Saga
 
 當一個業務流程需要跨多個 Aggregate、Context 或外部系統，且流程本身有狀態，就不要把邏輯塞進 event listener。

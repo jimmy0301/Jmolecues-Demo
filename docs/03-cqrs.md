@@ -116,6 +116,37 @@ CQRS 把寫入路徑集中在 Command Handler，但不代表 Command 會一個�
 悲觀鎖是例外手段，只能用在同一資料庫交易內可控、競爭極高且重試 / 補償成本不可接受的 Command。
 採用悲觀鎖時，必須在文件或 ADR 寫清楚鎖範圍、等待 timeout、deadlock 處理與壓力測試結果。
 
+Command handler 使用悲觀鎖時，鎖只包住「載入 Aggregate → 執行 domain method → 儲存」這段最短臨界區。
+不要在持鎖期間呼叫外部 API、發布同步整合請求、等待使用者輸入，或處理跨 Context 長流程。
+
+```java
+@CommandHandler
+@Transactional(timeout = 3)
+public void handle(PlaceOrderCommand command) {
+    Order order = orderRepository.findByIdForUpdate(command.orderId())
+            .orElseThrow(OrderNotFoundException::new);
+
+    order.place();
+    orderRepository.save(order);
+}
+```
+
+若使用 MongoDB，文件範例建議用 lease lock 包住 command handler 的最短臨界區，而不是宣稱 Mongo 有 row-level pessimistic lock：
+
+```java
+@CommandHandler
+public void handleWithLeaseLock(PlaceOrderCommand command) {
+    LockToken token = orderLock.acquire(command.orderId(), Duration.ofSeconds(2), Duration.ofSeconds(10));
+    try {
+        Order order = orderRepository.findById(command.orderId()).orElseThrow();
+        order.place();
+        orderRepository.save(order);
+    } finally {
+        orderLock.release(token);
+    }
+}
+```
+
 ### Read Model 與 Projection
 
 CQRS 允許 read side 和 write side 使用不同模型。

@@ -35,3 +35,58 @@ Command Handler 載入 Aggregate、呼叫 domain method、儲存。
 ## Example
 
 `PlaceOrderCommand` 若與 `CancelOrderCommand` 同時進來，其中一方成功後，另一方需要重新讀取最新狀態再依 domain rule 決定結果。
+
+## Pessimistic Locking Example
+
+悲觀鎖是少數高競爭 command 的例外策略。它的目的不是取代 Aggregate invariant，而是避免同一 Aggregate 的多個 command 同時進入最短寫入臨界區。
+
+SQL/JPA 常見寫法：
+
+```java
+public interface OrderJpaRepository extends JpaRepository<Order, OrderId> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.id = :id")
+    Optional<Order> findByIdForUpdate(OrderId id);
+}
+
+@Transactional(timeout = 3)
+public void placeWithPessimisticLock(PlaceOrderCommand command) {
+    Order order = orderRepository.findByIdForUpdate(command.orderId())
+            .orElseThrow(OrderNotFoundException::new);
+
+    order.place();
+    orderRepository.save(order);
+}
+```
+
+MongoDB 沒有 SQL row lock。若專案真的需要悲觀鎖語意，可用 lock collection 做短租約：
+
+```java
+public record LockToken(String lockKey, String owner, Instant expiresAt) {}
+
+public interface PessimisticOrderLock {
+    LockToken acquire(OrderId orderId, Duration waitTimeout, Duration leaseTtl);
+    void release(LockToken token);
+}
+
+public void placeWithLeaseLock(PlaceOrderCommand command) {
+    LockToken token = lock.acquire(command.orderId(), Duration.ofSeconds(2), Duration.ofSeconds(10));
+    try {
+        Order order = orderRepository.findById(command.orderId()).orElseThrow();
+        order.place();
+        orderRepository.save(order);
+    } finally {
+        lock.release(token);
+    }
+}
+```
+
+Mongo lease lock 實作要點：
+
+- lock key 以 Aggregate id 建唯一索引，例如 `ordering:order:{orderId}`
+- acquire 必須使用原子 upsert / conditional update，只能取得不存在或已過期的 lock
+- lock document 保存 owner token，release 時只能刪除同 owner 的 lock
+- 每個 lock 必須有 `expiresAt`，避免程序中斷造成永久鎖
+- 持鎖期間只做載入 Aggregate、呼叫 domain method、儲存；不可呼叫外部系統
+- 測試需覆蓋 acquire 失敗、等待 timeout、TTL 過期後可重新取得、不能 release 別人的 lock
