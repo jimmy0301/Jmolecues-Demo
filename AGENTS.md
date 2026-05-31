@@ -42,8 +42,8 @@ com.example.demo
     ├── domain/              @DomainModelRing   → Order, OrderId, OrderItem, OrderRepository
     │                                             CustomerReference, ProductReference, events…
     ├── domainservice/       @DomainServiceRing → PricingService
-    ├── application/         @ApplicationServiceRing → OrderService, OrderQueryModel, OrderEventListener
-    │                                                   commands/
+    ├── application/         @ApplicationServiceRing → OrderService, OrderQueryModel, OrderSummaryProjection
+    │                                                   OrderEventListener, commands/
     ├── infrastructure/web/  @InfrastructureRing → OrderController
     ├── BadOrder             ⚠️ violation demo
     ├── OrderItemRepository  ⚠️ violation demo

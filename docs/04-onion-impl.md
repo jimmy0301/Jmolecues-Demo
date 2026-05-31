@@ -31,7 +31,7 @@ graph TD
                 end
                 S["PricingService"]
             end
-            A["OrderService · OrderQueryModel · OrderEventListener\nCreateOrderCommand · PlaceOrderCommand · CancelOrderCommand"]
+            A["OrderService · OrderQueryModel · OrderSummaryProjection · OrderEventListener\nCreateOrderCommand · PlaceOrderCommand · CancelOrderCommand"]
         end
         I["OrderController"]
     end
@@ -41,7 +41,7 @@ graph TD
 |---|---|---|
 | DomainModel | `@DomainModelRing` | `Order`、`OrderItem`、`OrderPlaced`、`OrderRepository`<br>`Product`、`ProductRepository`<br>`Customer`、`CustomerRepository` |
 | DomainService | `@DomainServiceRing` | `PricingService` |
-| ApplicationService | `@ApplicationServiceRing` | `OrderService`、`OrderQueryModel`、`OrderEventListener`、`*Command`<br>`ProductService`、`ProductQueryModel`、`CreateProductCommand`<br>`CustomerService`、`CustomerQueryModel`、`CreateCustomerCommand` |
+| ApplicationService | `@ApplicationServiceRing` | `OrderService`、`OrderQueryModel`、`OrderSummary`、`OrderSummaryProjection`、`OrderEventListener`、`*Command`<br>`ProductService`、`ProductQueryModel`、`CreateProductCommand`<br>`CustomerService`、`CustomerQueryModel`、`CreateCustomerCommand` |
 | Infrastructure | `@InfrastructureRing` | `OrderController`、`ProductController`、`CustomerController` |
 
 ---

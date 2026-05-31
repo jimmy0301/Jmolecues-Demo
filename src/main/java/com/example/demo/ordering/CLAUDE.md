@@ -24,6 +24,8 @@ ordering/
   application/                   @ApplicationServiceRing
     OrderService.java              @CommandHandler methods
     OrderQueryModel.java           @QueryModel
+    OrderSummary.java              read model DTO
+    OrderSummaryProjection.java    @QueryModel + @ApplicationModuleListener
     OrderEventListener.java
     command/
       CreateOrderCommand.java      @Command
@@ -52,6 +54,8 @@ ordering/
 | `PricingService` | domainservice | DomainService | `@Service`，計算訂單總價 |
 | `OrderService` | application | ApplicationService | `@CommandHandler` 接收 Command，協調 repository，發布 domain event |
 | `OrderQueryModel` | application | QueryModel | `@QueryModel` 只讀，不觸發狀態改變 |
+| `OrderSummary` | application | ReadModel | 訂單查詢 projection 的摘要 DTO |
+| `OrderSummaryProjection` | application | QueryModel / Projection | 透過 `@ApplicationModuleListener` 消費事件，建立可重複處理的 read model |
 | `CreateOrderCommand` | application/command | `@Command` | 建立新訂單 |
 | `PlaceOrderCommand` | application/command | `@Command` | 確認下單 |
 | `CancelOrderCommand` | application/command | `@Command` | 取消訂單 |

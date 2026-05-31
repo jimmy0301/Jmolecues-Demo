@@ -61,7 +61,7 @@ ordering/domain/Order.java
 ordering/domain/OrderStatus.java
 ```
 
-**對應測試：** [`OrderTest`](../src/test/java/com/example/demo/ordering/domain/OrderTest.java) — 驗證 `addItem` / `place` / `cancel` 狀態機與 guard 條件（9 個案例）。
+**對應測試：** [`OrderTest`](../src/test/java/com/example/demo/ordering/domain/OrderTest.java) — 驗證 `addItem` / `place` / `cancel` 狀態機、guard 條件與 `place()` 重送語意。
 
 ```java
 public void place() {
@@ -77,6 +77,7 @@ public void place() {
 
 - Aggregate Root 自己保護 invariant，只有 `PENDING` 訂單可以成立
 - 狀態改變和事件登記在同一個方法內完成，避免外部忘記補 event
+- `PLACED` 訂單再次 `place()` 是 no-op，不重複登記 `OrderPlaced`，作為 command 重送的冪等範例
 
 外部只能透過 `addItem()`、`place()`、`cancel()` 這類有業務語意的方法操作訂單。
 不要暴露可修改的 `items` list，也不要提供 `setStatus()` 讓外部繞過狀態機。
@@ -99,6 +100,7 @@ ordering/application/OrderEventListener.java
 若未來要給其他 Context 或外部系統消費，應視為 Integration Event / Public Event：欄位只放穩定型別，不暴露 `Order`、`OrderItem`、internal QueryModel 或 API DTO。
 
 Event listener 要能處理重送。若同一個 `OrderPlaced` 收到兩次，不應重複建立 projection、重複發通知或重複扣庫存；可用 event id、aggregate id + event type，或本地處理紀錄做去重。
+本專案的 `OrderSummaryProjection` 用 `orderId` 覆蓋同一筆 summary，示範重複事件不產生重複 read model。
 
 ### Step 5：Application Service — 協調者，不含業務邏輯
 

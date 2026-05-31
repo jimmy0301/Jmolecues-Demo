@@ -97,6 +97,7 @@ Command 可能因 HTTP retry、message retry 或使用者重複操作而被送�
 
 Event listener 也要具備冪等性，因為事件可能重送或重試。
 不要假設「只會收到一次」。
+本專案選擇讓 `PlaceOrderCommand` 對已成立訂單採 no-op 語意，不重複登記 `OrderPlaced`。
 
 ### Read Model 與 Projection
 

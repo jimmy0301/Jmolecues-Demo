@@ -38,6 +38,8 @@ ordering/
   application/
     OrderService.java          ← @CommandHandler methods
     OrderQueryModel.java       ← @QueryModel
+    OrderSummary.java          ← read model DTO
+    OrderSummaryProjection.java ← @QueryModel projection, event-driven and idempotent
     command/
       CreateOrderCommand.java  ← @Command
       PlaceOrderCommand.java   ← @Command
@@ -51,6 +53,7 @@ ordering/
 Command 必須**不可變**，且只能放在 `*.application.command` 套件。
 Command 表達 use case 意圖，不是 HTTP request DTO；即使欄位和 API payload 一樣，也要由 Controller 明確轉換。
 若 command 可能由外部重送，需設計 request id / command id 或明確定義重送語意。
+本專案示範 `PlaceOrderCommand` 的重送語意：訂單已是 `PLACED` 時再次 `place()` 視為 no-op，不重複登記 `OrderPlaced`。
 
 ```java
 // ✅ 正確：record 天生不可變，位於 application.command
@@ -118,6 +121,16 @@ public class OrderQueryModel {
     }
 }
 ```
+
+### Projection 範例
+
+`OrderSummaryProjection` 展示 read model / projection 的基本形式：
+
+- 用 `@ApplicationModuleListener` 消費 `OrderPlaced` / `OrderCancelled`
+- 用 `put(orderId, summary)` 覆蓋同一筆 read model，因此重複事件不會產生重複資料
+- Query 回傳 `OrderSummary`，不是 Aggregate
+
+測試檔案：[`OrderSummaryProjectionTest`](../src/test/java/com/example/demo/ordering/application/OrderSummaryProjectionTest.java)
 
 ---
 

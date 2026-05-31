@@ -49,6 +49,9 @@ public class Order extends AbstractAggregateRoot<Order>
     }
 
     public void place() {
+        if (status == OrderStatus.PLACED) {
+            return;
+        }
         if (status != OrderStatus.PENDING) {
             throw new IllegalStateException("Order is already " + status);
         }

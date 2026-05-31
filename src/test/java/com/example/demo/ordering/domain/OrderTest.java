@@ -66,13 +66,14 @@ class OrderTest {
     }
 
     @Test
-    void place_whenAlreadyPlaced_throws() {
+    void place_whenAlreadyPlaced_isIdempotent() {
         var order = new Order(CUSTOMER_ID);
         order.place();
 
-        assertThatThrownBy(order::place)
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("already");
+        order.place();
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
+        assertThat(order.getRegisteredEvents()).hasSize(1);
     }
 
     @Test
