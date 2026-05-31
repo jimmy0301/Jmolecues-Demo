@@ -25,6 +25,7 @@
 | 單元測試 | Mockito | 5.17.0 | Mock / Stub（via spring-boot-starter-test） |
 | API 測試 | Spring MVC Test（MockMvc） | — | `@WebMvcTest` Controller slice 測試，不需啟動 MongoDB |
 | 整合測試 | Testcontainers（MongoDB） | 1.21.4 | 在真實 MongoDB 容器中執行 Repository 整合測試 |
+| HTTP Stub 測試 | WireMock | — | Stub 外部 HTTP API，驗證 adapter 與 contract mapping |
 | 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 | 強制統一格式 |
 | 樣板程式碼 | Lombok | 1.18.46 | `@Getter`、`@Builder` 等 |
 
@@ -182,6 +183,72 @@ class MongoTestContainersConfig {
 **版本來源**：Testcontainers `1.21.4` 由 Spring Boot BOM（`3.5.14`）管理，pom.xml 不需要明確指定版本。
 
 **前置條件**：執行整合測試時本機需有 Docker 環境。若 Docker 未啟動，`@DataMongoTest` 測試會失敗（`@WebMvcTest` 測試不受影響）。
+
+---
+
+### WireMock — 外部 HTTP API Stub 測試
+
+**問題**：Application Service 或 infrastructure adapter 需要呼叫外部 HTTP API 時，測試若直接打真實服務，會受到網路、測試資料、權限、速率限制與外部系統狀態影響。
+
+**解法**：WireMock 在測試中啟動本地 HTTP stub server，由測試明確定義 request / response contract：
+
+```java
+@WireMockTest(httpPort = 0)
+class ProductCatalogClientTest {
+
+    @Test
+    void getProduct_returnsMappedResult(WireMockRuntimeInfo wireMock) {
+        stubFor(get("/products/abc")
+                .willReturn(okJson("""
+                        {
+                          "id": "abc",
+                          "name": "Keyboard",
+                          "price": 1200
+                        }
+                        """)));
+
+        var client = new ProductCatalogClient(wireMock.getHttpBaseUrl());
+
+        var product = client.getProduct("abc");
+
+        assertThat(product.name()).isEqualTo("Keyboard");
+        verify(getRequestedFor(urlEqualTo("/products/abc")));
+    }
+}
+```
+
+WireMock 適合測試 **adapter 與外部 HTTP contract 的 mapping**：
+
+- request path、query string、header、body 是否正確
+- 外部 response 是否轉成本 Context 的 application result / ValueObject
+- 404、429、5xx、timeout 等錯誤如何轉成 application error
+- retry / fallback / circuit breaker 是否只包在 infrastructure adapter，不污染 domain
+
+WireMock 不取代以下測試：
+
+- Controller API 測試仍使用 `@WebMvcTest` + MockMvc
+- Repository 整合測試仍使用 Testcontainers MongoDB
+- Domain invariant 仍用純單元測試驗證
+- 跨 Context 的同步流程仍應透過 public facade / contract 測試，不直接 mock 對方 domain model
+
+**DDD / Onion 邊界規則**：
+
+- WireMock 只出現在 test code，不出現在 production code
+- 外部 API DTO 只留在 infrastructure adapter 或 test fixture
+- 測試 assertion 應驗證 adapter 輸出的是本 Context 的語言，不是外部 payload 原樣外洩
+- stub response 應集中在 fixture/helper，避免每個測試複製大型 JSON
+
+**依賴建議**：
+
+```xml
+<dependency>
+    <groupId>org.wiremock</groupId>
+    <artifactId>wiremock-standalone</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+若使用 Spring Boot 測試整合，也可依專案需求評估 Spring Cloud Contract WireMock；但核心原則不變：WireMock 是測試外部 HTTP contract 的工具，不是 domain 測試工具。
 
 ---
 

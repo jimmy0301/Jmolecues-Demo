@@ -59,7 +59,7 @@
 ### 3. 技術棧與日常開發工具
 
 9. [技術棧說明](docs/02-tech-stack.md)
-   — Spring Boot、MongoDB、jMolecules、Spring Modulith、ArchUnit、OpenAPI Generator、Spotless
+   — Spring Boot、MongoDB、jMolecules、Spring Modulith、ArchUnit、OpenAPI Generator、WireMock、Spotless
 
 10. [Agent Skills 說明](docs/05-skills.md)
    — 如何新增 Bounded Context、Aggregate、Entity、Repository、Domain Event、Service，並執行架構驗證
