@@ -152,19 +152,33 @@ Data migration 標準工具使用 Flamingock，詳細規範見 [Flamingock Data 
 **解法**：Testcontainers 在每次測試時啟動一個真實的 MongoDB Docker 容器，Repository 測試直接操作真實資料庫：
 
 ```java
-// 標準組合：三個 annotation 缺一不可
-@DataMongoTest                          // 只載入 MongoDB 相關 Bean，不啟動整個 Spring context
-@Import(MongoTestContainersConfig.class) // 注入 Testcontainers 設定
-@Testcontainers                         // 啟動 / 停止容器的生命週期管理
-class OrderRepositoryTest {
+// MongoIntegrationTest.java — 所有 Repository 整合測試共用的基底類別
+@DataMongoTest                           // 只載入 MongoDB 相關 Bean，不啟動整個 Spring context
+@Import(MongoTestContainersConfig.class) // 提供由 Testcontainers 管理的 MongoDB 容器
+public abstract class MongoIntegrationTest {}
+```
 
-    @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7");
+```java
+// MongoTestContainersConfig.java — 容器由 Spring 管理生命週期，不需要 @Testcontainers / @Container
+@TestConfiguration(proxyBeanMethods = false)
+class MongoTestContainersConfig {
+
+    @Bean
+    @ServiceConnection                   // 自動將容器連線資訊注入 Spring Data，不需手動設定 spring.mongodb.*
+    MongoDBContainer mongoDBContainer() { // org.testcontainers.mongodb.MongoDBContainer（Testcontainers 2.x）
+        return new MongoDBContainer("mongo:7");
+    }
+}
+```
+
+```java
+// OrderRepositoryTest.java — 測試類別只需繼承基底類別
+class OrderRepositoryTest extends MongoIntegrationTest {
 
     @Autowired OrderRepository orderRepository;
 
     @Test
-    void save_andFindById_returnsPersistedOrder() {
+    void saveAndFindById_preservesCustomerAndStatus() {
         var order = new Order(UUID.randomUUID());
         orderRepository.save(order);
 
@@ -175,21 +189,10 @@ class OrderRepositoryTest {
 }
 ```
 
-共用的容器設定放在 `MongoTestContainersConfig`：
+> **注意**：`MongoDBContainer` 要用 `org.testcontainers.mongodb`（2.x 新位置）。舊的 `org.testcontainers.containers.MongoDBContainer`
+> 雖仍可編譯，但 `@ServiceConnection` 會走 Boot 的 deprecated 路徑，之後可能移除。
 
-```java
-@TestConfiguration
-class MongoTestContainersConfig {
-
-    @Bean
-    @ServiceConnection                   // 自動將容器連線資訊注入 Spring Data
-    MongoDBContainer mongoDBContainer() {
-        return new MongoDBContainer("mongo:7");
-    }
-}
-```
-
-**版本來源**：Testcontainers `2.0.5`（artifact 為 `testcontainers-mongodb`、`testcontainers-junit-jupiter`）由 Spring Boot BOM（`4.1.2`）管理，pom.xml 不需要明確指定版本。
+**版本來源**：Testcontainers `2.0.5`（artifact 為 `testcontainers-mongodb`，2.x 起名稱帶 `testcontainers-` 前綴）由 Spring Boot BOM（`4.1.2`）管理，pom.xml 不需要明確指定版本。
 
 **前置條件**：執行整合測試時本機需有 Docker 環境。若 Docker 未啟動，`@DataMongoTest` 測試會失敗（`@WebMvcTest` 測試不受影響）。
 
