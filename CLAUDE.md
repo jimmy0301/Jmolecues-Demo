@@ -6,8 +6,8 @@
 
 | 類別 | 技術 | 版本 |
 |---|---|---|
-| 語言 / 平台 | Java | 17 |
-| 框架 | Spring Boot | 3.5.14 |
+| 語言 / 平台 | Java | 21 |
+| 框架 | Spring Boot | 4.1.2 |
 | Web | Spring Boot Starter Web | — |
 | API 規格 | OpenAPI Generator Maven Plugin | 7.12.0 |
 | 資料庫 | Spring Data MongoDB | — |
@@ -17,12 +17,12 @@
 | 架構風格 | jMolecules CQRS Architecture | BOM 2025.0.2 |
 | Spring 整合 | jMolecules Spring Integration | BOM 2025.0.2 |
 | Bytecode 轉換 | jMolecules ByteBuddy（nodep） + ByteBuddy Maven Plugin | BOM / 1.14.12 |
-| 模組管理 | Spring Modulith Starter Core | 1.3.5 |
-| 模組事件 | Spring Modulith Events API | 1.3.5 |
-| 架構測試 | jMolecules ArchUnit + Spring Modulith Test | BOM / 1.3.5 |
-| 單元測試 | JUnit Jupiter + AssertJ + Mockito | 5.12.2 / 3.27.7 / 5.17.0 |
+| 模組管理 | Spring Modulith Starter Core | 2.1.2 |
+| 模組事件 | Spring Modulith Events API | 2.1.2 |
+| 架構測試 | jMolecules ArchUnit + Spring Modulith Test | BOM / 2.1.2 |
+| 單元測試 | JUnit Jupiter + AssertJ + Mockito | 6.0.3 / 3.27.7 / 5.23.0 |
 | 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 |
-| 樣板程式碼 | Lombok | 1.18.46 |
+| 樣板程式碼 | Lombok | 1.18.48 |
 
 ## Bounded Context（Onion Architecture — Classical）
 ```

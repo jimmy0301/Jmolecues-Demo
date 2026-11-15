@@ -5,6 +5,14 @@ All notable changes to this project are documented here.
 This project uses [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
 There are no release tags yet, so entries are grouped by commit date.
 
+## 2026-11-15
+
+### Changed
+
+- Upgraded Spring Boot 3.5.14 → 4.1.2, Spring Modulith 1.3.5 → 2.1.2, Java 17 → 21, Lombok 1.18.46 → 1.18.48.
+- Migrated MongoDB properties for Spring Boot 4: `spring.data.mongodb.uri` → `spring.mongodb.uri`; set `spring.mongodb.representation.uuid=java-legacy` to keep the Boot 3 UUID encoding.
+- Migrated tests for Spring Boot 4: `@MockBean` → `@MockitoBean`, new `spring-boot-starter-webmvc-test` / `spring-boot-starter-data-mongodb-test`, Testcontainers 2.x artifact names.
+
 ## 2026-05-31
 
 ### Added

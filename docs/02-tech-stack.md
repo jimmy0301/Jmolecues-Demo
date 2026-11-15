@@ -4,8 +4,8 @@
 
 | 類別 | 技術 | 版本 | 職責 |
 |---|---|---|---|
-| 語言 / 平台 | Java | 17 | — |
-| 框架 | Spring Boot | 3.5.14 | 應用程式骨架 |
+| 語言 / 平台 | Java | 21 | — |
+| 框架 | Spring Boot | 4.1.2 | 應用程式骨架 |
 | Web | Spring Boot Starter Web | — | REST 端點 |
 | API 規格 | OpenAPI Generator Maven Plugin | 7.12.0 | 從 YAML spec 產生 Spring server interface |
 | 資料庫 | Spring Data MongoDB | — | 持久化 |
@@ -17,18 +17,18 @@
 | Spring 整合 | jMolecules Spring Integration | BOM 2025.0.2 | ByteBuddy 產生 Spring Data 相容程式碼 |
 | Bytecode 轉換 | jMolecules ByteBuddy（nodep） | BOM 2025.0.2 | 編譯期自動產生樣板程式碼 |
 | Bytecode 插件 | ByteBuddy Maven Plugin | 1.14.12 | 觸發 ByteBuddy 轉換的 Maven 插件 |
-| 模組管理 | Spring Modulith Starter Core | 1.3.5 | Bounded Context 邊界驗證與文件 |
-| 模組事件 | Spring Modulith Events API | 1.3.5 | `@ApplicationModuleListener` |
+| 模組管理 | Spring Modulith Starter Core | 2.1.2 | Bounded Context 邊界驗證與文件 |
+| 模組事件 | Spring Modulith Events API | 2.1.2 | `@ApplicationModuleListener` |
 | 架構測試 | jMolecules ArchUnit | BOM 2025.0.2 | DDD / Onion 規則自動驗證 |
-| 架構測試 | Spring Modulith Test | 1.3.5 | 模組結構測試 |
-| 單元測試 | JUnit Jupiter | 5.12.2 | 單元測試框架（via spring-boot-starter-test） |
+| 架構測試 | Spring Modulith Test | 2.1.2 | 模組結構測試 |
+| 單元測試 | JUnit Jupiter | 6.0.3 | 單元測試框架（via spring-boot-starter-test） |
 | 單元測試 | AssertJ | 3.27.7 | Fluent assertion（via spring-boot-starter-test） |
-| 單元測試 | Mockito | 5.17.0 | Mock / Stub（via spring-boot-starter-test） |
+| 單元測試 | Mockito | 5.23.0 | Mock / Stub（via spring-boot-starter-test） |
 | API 測試 | Spring MVC Test（MockMvc） | — | `@WebMvcTest` Controller slice 測試，不需啟動 MongoDB |
-| 整合測試 | Testcontainers（MongoDB） | 1.21.4 | 在真實 MongoDB 容器中執行 Repository / migration 整合測試 |
+| 整合測試 | Testcontainers（MongoDB） | 2.0.5 | 在真實 MongoDB 容器中執行 Repository / migration 整合測試 |
 | HTTP Stub 測試 | WireMock | — | Stub 外部 HTTP API，驗證 adapter 與 contract mapping |
 | 程式碼格式 | Spotless + Google Java Format AOSP | 2.46.1 / 1.28.0 | 強制統一格式 |
-| 樣板程式碼 | Lombok | 1.18.46 | `@Getter`、`@Builder` 等 |
+| 樣板程式碼 | Lombok | 1.18.48 | `@Getter`、`@Builder` 等 |
 
 ---
 
@@ -183,7 +183,7 @@ class MongoTestContainersConfig {
 }
 ```
 
-**版本來源**：Testcontainers `1.21.4` 由 Spring Boot BOM（`3.5.14`）管理，pom.xml 不需要明確指定版本。
+**版本來源**：Testcontainers `2.0.5`（artifact 為 `testcontainers-mongodb`、`testcontainers-junit-jupiter`）由 Spring Boot BOM（`4.1.2`）管理，pom.xml 不需要明確指定版本。
 
 **前置條件**：執行整合測試時本機需有 Docker 環境。若 Docker 未啟動，`@DataMongoTest` 測試會失敗（`@WebMvcTest` 測試不受影響）。
 
@@ -265,7 +265,7 @@ mvn spotless:apply   # 自動修正格式
 mvn spotless:check   # 只檢查，不修正（validate phase 執行的是這個）
 ```
 
-**版本限制**：本專案使用 GJF **1.28.0**。GJF 1.30.0+ 不支援 JDK 17，升版前需確認 JDK 相容性。
+**版本限制**：本專案使用 GJF **1.28.0**。GJF 1.30.0+ 不支援 JDK 17；專案已升至 Java 21，升版前請先確認 Spotless 實際執行的 JDK 版本相容性。
 
 ---
 
