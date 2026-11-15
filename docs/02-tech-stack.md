@@ -256,6 +256,7 @@ WireMock 不取代以下測試：
 <dependency>
     <groupId>org.wiremock</groupId>
     <artifactId>wiremock-standalone</artifactId>
+    <version>3.13.2</version>   <!-- Boot BOM 不管理 WireMock，必須自己指定版本（4.0 仍是 beta） -->
     <scope>test</scope>
 </dependency>
 ```

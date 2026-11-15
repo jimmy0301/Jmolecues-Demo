@@ -70,6 +70,9 @@
 11. [架構 Review Checklist](docs/06-architecture-review-checklist.md)
     — 開 PR 前檢查 DDD / CQRS / Onion / Event / Concurrency / Test 文件是否到位
 
+12. [測試策略與實作](docs/07-testing.md)
+    — 各層測試怎麼寫、Testcontainers 整合測試、架構測試與預期失敗、執行指令、已知陷阱
+
 ---
 
 ## 驗證指令

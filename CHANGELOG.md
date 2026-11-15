@@ -7,6 +7,14 @@ There are no release tags yet, so entries are grouped by commit date.
 
 ## 2026-11-15
 
+### Added
+
+- Added `docs/07-testing.md`: testing strategy per architecture layer, integration tests with Testcontainers, architecture tests and expected violation-demo failures, commands, and known pitfalls.
+
+### Fixed (docs)
+
+- `docs/02-tech-stack.md`: the WireMock dependency snippet now pins a version (`wiremock-standalone` is not managed by the Spring Boot BOM).
+
 ### Changed (tests)
 
 - Unified Testcontainers setup with the documented pattern: `MongoTestContainersConfig` (`@ServiceConnection`, `org.testcontainers.mongodb.MongoDBContainer`) imported by `MongoIntegrationTest`; removed the unused `testcontainers-junit-jupiter` dependency.
