@@ -43,7 +43,7 @@ com.example.demo
     │                                             CustomerReference, ProductReference, events…
     ├── domainservice/       @DomainServiceRing → PricingService
     ├── application/         @ApplicationServiceRing → OrderService, OrderQueryModel, OrderEventListener
-    │                                                   commands/
+    │                                                   command/
     ├── infrastructure/web/  @InfrastructureRing → OrderController
     ├── BadOrder             ⚠️ violation demo
     ├── OrderItemRepository  ⚠️ violation demo
@@ -57,7 +57,7 @@ com.example.demo
 - 跨 Context 用 Reference Object（`@ValueObject record XxxReference(UUID id)`），不 import 對方型別、不持有 Aggregate 物件
 - Repository 只為 AggregateRoot 建立
 - ValueObject / Command 必須不可變（record 或 final fields）
-- @Command 放在 `application.command` 套件；@CommandHandler 只在 `application` 層
+- @Command 與 @CommandHandler 都必須在標記 `@ApplicationServiceRing` 的 package（慣例：@Command 放 `application.command`）
 - @QueryModel 不可呼叫 @CommandHandler（read side 不觸發 state change）
 - 每次新增 class 後執行 `mvn spotless:apply` 再跑 ArchUnit test
 - Controller 新增時補對應 `@WebMvcTest` API 測試，放在相同 package（`infrastructure.web`）
