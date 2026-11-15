@@ -81,7 +81,7 @@
 # 格式化
 mvn spotless:apply
 
-# 全部測試（含 ArchUnit + Spring Modulith）
+# 全部測試（含 ArchUnit + Spring Modulith + Testcontainers 整合測試；需要 Docker）
 mvn test
 
 # 只跑架構測試（ArchUnit）
@@ -94,6 +94,7 @@ mvn test -Dtest=ModularityTest
 **預期結果**：
 
 本專案刻意保留 violation demo，所以部分架構測試預期失敗；這是教學用途，不代表專案壞掉。
+各層測試怎麼寫、用什麼 package、其他執行指令，見 [測試策略與實作](docs/07-testing.md)。
 
 | 測試 | 結果 | 說明 |
 |---|---|---|

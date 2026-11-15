@@ -59,7 +59,7 @@
 
 ## Tests and Docs
 
-- 新增 controller 時有同 package `@WebMvcTest`
+- 新增 controller 時有同 package `@WebMvcTest`（各類測試的寫法見 [測試策略與實作](07-testing.md)）
 - 新增 rule / pattern 時同步 `.codex/rules/`、`docs/`、`patterns/`
 - 新增架構決策時補 `decisions/` 或 `docs/adr/`
 - 新增跨專案可重用模式時補 `patterns/`
