@@ -58,20 +58,23 @@ public class BadQueryModel {
 - ArchUnit 透過 `MethodCallTarget.resolveMember()` 在 bytecode 中追蹤方法呼叫
 - 即使間接呼叫鏈也應避免 Query → Command 的依賴
 
-## 規則 #6：@Command 必須放在 application.command 套件
+## 規則 #6：@Command 必須放在 @ApplicationServiceRing 標記的 package
+
+ArchUnit 以 package-info 上的 `@ApplicationServiceRing` 為準，不檢查 package 名稱。
+本專案慣例是放在 `application.command` 子套件（該套件的 `package-info.java` 也要標 `@ApplicationServiceRing`）：
 
 ```
 <bounded-context>/
-  application/
-    command/        ← @Command 唯一合法位置
+  application/        ← @ApplicationServiceRing
+    command/          ← 慣例位置，package-info 同樣標 @ApplicationServiceRing
 ```
 
 ```java
-// ✅ 正確：package *.application.command
+// ✅ 正確：package 標記 @ApplicationServiceRing（慣例：*.application.command）
 @Command
 public record PlaceOrderCommand(OrderId orderId) {}
 
-// ❌ 違規：放在 context root 或其他套件
+// ❌ 違規：放在 context root 或其他未標記 @ApplicationServiceRing 的 package
 @Command
 public class BadCommand { ... }
 ```

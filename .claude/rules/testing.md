@@ -185,7 +185,7 @@ src/test/java/<base-package>/
 |---|---|
 | `commandsShouldBeImmutable` | `@Command` 不可有非 final 欄位或 setter |
 | `queryModelsShouldNotTriggerCommands` | `@QueryModel` 不可呼叫 `@CommandHandler` 方法 |
-| `commandsShouldResideInCommandPackage` | `@Command` 必須在 `*.application.command` 套件 |
+| `commandsShouldResideInApplicationServiceRing` | `@Command` 必須在標記 `@ApplicationServiceRing` 的 package |
 | `commandHandlersShouldBeInApplicationLayer` | `@CommandHandler` 方法只能在 `*.application.*` 套件 |
 
 ### ArchUnit 實作細節
@@ -209,7 +209,7 @@ src/test/java/<base-package>/
 | `valueObjectsShouldBeImmutable` | `MutablePrice`（有 setter） |
 | `commandsShouldBeImmutable` | `BadCommand`（non-final 欄位） |
 | `queryModelsShouldNotTriggerCommands` | `BadQueryModel`（`@QueryModel` 呼叫 `@CommandHandler`） |
-| `commandsShouldResideInCommandPackage` | `BadCommand`（放在 context root，非 `application.command`） |
+| `commandsShouldResideInApplicationServiceRing` | `BadCommand`（放在 context root，該 package 未標記 `@ApplicationServiceRing`） |
 | `commandHandlersShouldBeInApplicationLayer` | `BadDomainHandler`（`@CommandHandler` 在 context root） |
 | `shouldFollowOnionArchitecture` | **通過**（無預期失敗） |
 | `ModularityTest#verifiesModularStructure` | `BadOrder`（持有 `Customer`）、`BadCommand`（直接 import `customer.domain.CustomerId`） |
@@ -228,6 +228,7 @@ mvn test -Dtest=JMoleculesArchitectureTest                        # 只跑架構
 mvn test -Dtest=ModularityTest                                    # 只跑模組測試
 mvn test -Dtest="OrderTest,OrderServiceTest"                      # 只跑指定單元測試
 mvn test -Dtest="ProductControllerTest,CustomerControllerTest,OrderControllerTest"  # 只跑 API 測試
+mvn test -Dtest='*RepositoryIT'                                   # 整合測試（需 Docker；不在預設 mvn test 內）
 mvn test                                                          # 全部跑（架構 + 單元 + API）
 ```
 

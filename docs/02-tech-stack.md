@@ -94,6 +94,12 @@ graph LR
 
 你只需要寫業務邏輯，`equals()`/`hashCode()` 自動產生。
 
+> **必要設定：註冊 `NotNewCallback`。** ByteBuddy 注入的 `MutablePersistable` 帶有 `isNew` 旗標，
+> 必須由 `org.jmolecules.spring.mongodb.NotNewCallback`（`AfterConvertCallback` / `AfterSaveCallback`）在載入與儲存後設為 `false`。
+> `jmolecules-spring` **不會自動註冊**它，需自行宣告 bean（本專案在 `DemoApplication`）。
+> 未註冊時不會有任何錯誤訊息：載入的 Aggregate 一律被當成新物件，`save()` 變成 insert，`@Version` 樂觀鎖失效
+> （stale save 會得到 `DuplicateKeyException`，而不是 `OptimisticLockingFailureException`）。
+
 **注意**：Spotless 格式檢查在 `validate` 階段（早於 `compile`），格式錯誤會在 ByteBuddy 執行前就終止建置。
 
 ---

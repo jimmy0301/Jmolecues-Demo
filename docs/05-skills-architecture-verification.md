@@ -17,7 +17,7 @@
 **執行步驟：**
 
 1. `mvn spotless:apply` — 格式化
-2. `mvn test -Dtest=JMoleculesArchitectureTest` — ArchUnit 規則（9 個測試）
+2. `mvn test -Dtest=JMoleculesArchitectureTest` — ArchUnit 規則
 3. `mvn test -Dtest=ModularityTest` — Spring Modulith 模組驗證
 
 **預期失敗（violation demo，不需修復）：**
