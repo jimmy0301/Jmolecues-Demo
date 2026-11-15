@@ -7,6 +7,10 @@ There are no release tags yet, so entries are grouped by commit date.
 
 ## 2026-11-15
 
+### Fixed
+
+- Registered jMolecules `NotNewCallback` so loaded aggregates are no longer treated as new; `@Version` optimistic locking on `Order` now works (stale save throws `OptimisticLockingFailureException` instead of `DuplicateKeyException`).
+
 ### Changed
 
 - Upgraded Spring Boot 3.5.14 → 4.1.2, Spring Modulith 1.3.5 → 2.1.2, Java 17 → 21, Lombok 1.18.46 → 1.18.48.
