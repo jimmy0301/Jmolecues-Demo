@@ -13,6 +13,7 @@
 - 知道 `.codex/rules/` 是架構規則，`patterns/` 是可重用模式，`docs/` 是入門文件
 - 知道 data migration 標準工具是 [Flamingock](02-tech-stack-flamingock.md)
 - 知道本專案刻意保留 violation demo，所以部分架構測試預期失敗
+- 讀過 [測試策略與實作](07-testing.md) 的「測試總覽」，知道各層用什麼方式測；`mvn test` 會跑 Testcontainers 整合測試，**本機要先開 Docker**
 
 ## 第一週：能判斷一個改動該放哪裡
 
@@ -21,6 +22,7 @@
 - 新增查詢時，用 QueryModel / read model，不從 query path 觸發 command
 - 跨 Context 保存關聯時，用 Reference Object，不 import 對方 Aggregate
 - API request / response DTO 只留在 `infrastructure.web`
+- 新增 Controller、Repository 或第三方 API adapter 時，用 [測試章節的速查表](07-testing.md#速查各類測試用什麼-package) 找到對應的測試類型、import 與測試檔位置
 - 事件消費者要能處理重送，projection 要能重建
 - Public contract 變更優先使用 additive change、deprecation 與 expand-and-contract migration
 - Data migration 用 Flamingock Change，不使用一次性手動腳本
@@ -35,10 +37,10 @@
 - 能說明 feature toggle 應放在哪一層，以及何時要移除
 - 能說明 Flamingock Change 為何部署後不可修改，以及 rollback / 補償策略怎麼檢查
 - 能跑 `mvn spotless:apply`
-- 能跑 focused test，並知道哪些架構測試因 violation demo 預期失敗
+- 能跑 focused test（指令見 [測試章節](07-testing.md#執行指令)），並知道哪些架構測試因 violation demo 預期失敗
 
 ## PR 前自查
 
-開 PR 前先走一次 [架構 Review Checklist](06-architecture-review-checklist.md)。
+開 PR 前先走一次 [架構 Review Checklist](06-architecture-review-checklist.md)，並對照 [測試章節](07-testing.md#新增程式碼時要補什麼測試) 確認該補的測試都有補。
 如果涉及 public contract、feature toggle 或 migration，先確認 rollback、backfill 與 compatibility 計畫。
 如果有新的架構決策，補到 `decisions/` 或 `docs/adr/`；如果是跨專案可重用的技術模式，補到 `patterns/`。
