@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-class ProductRepositoryIT extends MongoIntegrationTest {
+class ProductRepositoryTest extends MongoIntegrationTest {
 
     @Autowired ProductRepository productRepository;
 

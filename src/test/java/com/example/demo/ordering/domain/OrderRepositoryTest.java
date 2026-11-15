@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 
-class OrderRepositoryIT extends MongoIntegrationTest {
+class OrderRepositoryTest extends MongoIntegrationTest {
 
     @Autowired OrderRepository orderRepository;
 
