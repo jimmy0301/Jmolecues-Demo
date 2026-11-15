@@ -144,12 +144,17 @@ class ProductControllerTest {
 src/test/java/<base-package>/
 ├── shared/
 │   └── MoneyTest.java                                  # Shared Kernel VO
+├── MongoIntegrationTest.java                           # Testcontainers 基底類別（需 Docker）
 ├── catalog/
+│   ├── domain/
+│   │   └── ProductRepositoryTest.java                  # Repository 整合測試
 │   ├── application/
 │   │   └── ProductServiceTest.java                     # Application Service
 │   └── infrastructure/web/
 │       └── ProductControllerTest.java                  # Controller API 測試
 ├── customer/
+│   ├── domain/
+│   │   └── CustomerRepositoryTest.java                 # Repository 整合測試
 │   ├── application/
 │   │   └── CustomerServiceTest.java                    # Application Service
 │   └── infrastructure/web/
@@ -157,7 +162,8 @@ src/test/java/<base-package>/
 └── ordering/
     ├── domain/
     │   ├── OrderTest.java                              # Aggregate 狀態機
-    │   └── OrderItemTest.java                          # Entity
+    │   ├── OrderItemTest.java                          # Entity
+    │   └── OrderRepositoryTest.java                    # Repository 整合測試（含樂觀鎖）
     ├── domainservice/
     │   └── PricingServiceTest.java                     # Domain Service
     ├── application/
@@ -228,7 +234,7 @@ mvn test -Dtest=JMoleculesArchitectureTest                        # 只跑架構
 mvn test -Dtest=ModularityTest                                    # 只跑模組測試
 mvn test -Dtest="OrderTest,OrderServiceTest"                      # 只跑指定單元測試
 mvn test -Dtest="ProductControllerTest,CustomerControllerTest,OrderControllerTest"  # 只跑 API 測試
-mvn test -Dtest='*RepositoryIT'                                   # 整合測試（需 Docker；不在預設 mvn test 內）
+mvn test -Dtest='*RepositoryTest'                                 # 只跑整合測試（Testcontainers，需 Docker；也包含在 mvn test）
 mvn test                                                          # 全部跑（架構 + 單元 + API）
 ```
 

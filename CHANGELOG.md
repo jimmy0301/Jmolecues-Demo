@@ -7,6 +7,10 @@ There are no release tags yet, so entries are grouped by commit date.
 
 ## 2026-11-15
 
+### Changed (tests)
+
+- Renamed `*RepositoryIT` to `*RepositoryTest` so Testcontainers integration tests run as part of `mvn test` (requires Docker).
+
 ### Fixed
 
 - Registered jMolecules `NotNewCallback` so loaded aggregates are no longer treated as new; `@Version` optimistic locking on `Order` now works (stale save throws `OptimisticLockingFailureException` instead of `DuplicateKeyException`).

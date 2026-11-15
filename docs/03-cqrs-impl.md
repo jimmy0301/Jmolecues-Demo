@@ -169,7 +169,7 @@ class OrderServiceTest {
 
 測試檔案：[`OrderServiceTest`](../src/test/java/com/example/demo/ordering/application/OrderServiceTest.java)、[`ProductServiceTest`](../src/test/java/com/example/demo/catalog/application/ProductServiceTest.java)、[`CustomerServiceTest`](../src/test/java/com/example/demo/customer/application/CustomerServiceTest.java)
 
-並發版本測試：[`OrderTest`](../src/test/java/com/example/demo/ordering/domain/OrderTest.java) 驗證 `Order` 有 `@Version` 欄位；[`OrderRepositoryIT`](../src/test/java/com/example/demo/ordering/domain/OrderRepositoryIT.java) 驗證 stale version 儲存會丟出 `OptimisticLockingFailureException`（依賴 `NotNewCallback` bean）。`*IT` 整合測試**不在** `mvn test` 預設範圍內（surefire 只跑 `*Test`，pom 未設定 failsafe），需要 Docker，並以 `mvn test -Dtest='*RepositoryIT'` 明確執行。
+並發版本測試：[`OrderTest`](../src/test/java/com/example/demo/ordering/domain/OrderTest.java) 驗證 `Order` 有 `@Version` 欄位；[`OrderRepositoryTest`](../src/test/java/com/example/demo/ordering/domain/OrderRepositoryTest.java) 驗證 stale version 儲存會丟出 `OptimisticLockingFailureException`（依賴 `NotNewCallback` bean）。整合測試繼承 `MongoIntegrationTest`（Testcontainers + `mongo:7`），隨 `mvn test` 一起執行，**需要 Docker**。
 
 ## Controller API 測試
 
