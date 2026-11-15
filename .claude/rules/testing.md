@@ -144,7 +144,8 @@ class ProductControllerTest {
 src/test/java/<base-package>/
 ├── shared/
 │   └── MoneyTest.java                                  # Shared Kernel VO
-├── MongoIntegrationTest.java                           # Testcontainers 基底類別（需 Docker）
+├── MongoIntegrationTest.java                           # Repository 整合測試基底類別（@DataMongoTest，需 Docker）
+├── MongoTestContainersConfig.java                      # @ServiceConnection MongoDBContainer（Testcontainers 2.x）
 ├── catalog/
 │   ├── domain/
 │   │   └── ProductRepositoryTest.java                  # Repository 整合測試

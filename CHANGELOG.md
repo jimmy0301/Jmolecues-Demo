@@ -9,6 +9,7 @@ There are no release tags yet, so entries are grouped by commit date.
 
 ### Changed (tests)
 
+- Unified Testcontainers setup with the documented pattern: `MongoTestContainersConfig` (`@ServiceConnection`, `org.testcontainers.mongodb.MongoDBContainer`) imported by `MongoIntegrationTest`; removed the unused `testcontainers-junit-jupiter` dependency.
 - Renamed `*RepositoryIT` to `*RepositoryTest` so Testcontainers integration tests run as part of `mvn test` (requires Docker).
 
 ### Fixed

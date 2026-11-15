@@ -1,21 +1,9 @@
 package com.example.demo;
 
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MongoDBContainer;
+import org.springframework.context.annotation.Import;
 
+/** Repository 整合測試基底類別：只載入 MongoDB slice，並以 Testcontainers 提供真實 MongoDB（需 Docker）。 */
 @DataMongoTest
-public abstract class MongoIntegrationTest {
-
-    private static final MongoDBContainer MONGO = new MongoDBContainer("mongo:7");
-
-    static {
-        MONGO.start();
-    }
-
-    @DynamicPropertySource
-    static void mongoProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.mongodb.uri", MONGO::getReplicaSetUrl);
-    }
-}
+@Import(MongoTestContainersConfig.class)
+public abstract class MongoIntegrationTest {}
