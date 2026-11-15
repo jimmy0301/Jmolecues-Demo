@@ -103,8 +103,8 @@ class OrderServiceTest {
 class ProductControllerTest {
 
     @Autowired MockMvc mockMvc;
-    @MockBean ProductService productService;
-    @MockBean ProductQueryModel productQueryModel;
+    @MockitoBean ProductService productService;
+    @MockitoBean ProductQueryModel productQueryModel;
 
     @Test
     void createProduct_returns201WithBody() throws Exception {
@@ -134,7 +134,7 @@ class ProductControllerTest {
 **規則：**
 - 用 `@WebMvcTest(XxxController.class)` 載入單一 Controller 的 web slice，不啟動完整 Spring context，不需要 MongoDB
 - 測試放在**與 Controller 相同的 package**（`infrastructure.web`），才能存取 package-private 的 Controller class
-- Application Service 和 QueryModel 一律用 `@MockBean`，不 mock domain 物件
+- Application Service 和 QueryModel 一律用 `@MockitoBean`，不 mock domain 物件
 - 每個 Controller 至少涵蓋：成功路徑（2xx）、not found（404）、請求 body 欄位驗證
 - WireMock 適用於 mock 外部 HTTP 服務；本專案目前無外部 HTTP 依賴，不需引入
 

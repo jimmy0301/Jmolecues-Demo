@@ -173,7 +173,7 @@ class OrderServiceTest {
 
 ## Controller API 測試
 
-Controller 用 `@WebMvcTest` 做 HTTP slice 測試，只載入 web 層，不啟動 MongoDB。Application Service 與 QueryModel 以 `@MockBean` 替換：
+Controller 用 `@WebMvcTest` 做 HTTP slice 測試，只載入 web 層，不啟動 MongoDB。Application Service 與 QueryModel 以 `@MockitoBean` 替換：
 Controller 同時是 API DTO 和 application model 的轉換邊界；測試應驗證 request DTO 會被轉成正確 Command，response 不直接洩漏 Aggregate 內部細節。
 API 層測 transport validation；domain invariant 仍由 domain / application 測試覆蓋。
 
@@ -182,8 +182,8 @@ API 層測 transport validation；domain invariant 仍由 domain / application �
 class OrderControllerTest {
 
     @Autowired MockMvc mockMvc;
-    @MockBean OrderService orderService;
-    @MockBean OrderQueryModel orderQueryModel;
+    @MockitoBean OrderService orderService;
+    @MockitoBean OrderQueryModel orderQueryModel;
 
     @Test
     void createOrder_returns201WithPendingStatus() throws Exception {
